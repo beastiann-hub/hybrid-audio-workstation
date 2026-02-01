@@ -56,6 +56,7 @@ body {
     max-width: 1600px;
     margin: 0 auto;
     padding: var(--spacing-lg);
+    padding-bottom: 80px; /* Space for fixed footer */
 }
 
 .spacer {
@@ -841,6 +842,13 @@ select option {
 
 /* === MIDI Controls === */
 #midi-controls {
+    margin: 16px 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#project-controls {
     margin: 16px 0;
     display: flex;
     gap: 8px;

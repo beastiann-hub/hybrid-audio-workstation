@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="HAW">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸŽ›ï¸</text></svg>">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
@@ -30,7 +30,7 @@
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <h2>🎵 Hybrid Audio Workstation</h2>
+            <h2>ðŸŽµ Hybrid Audio Workstation</h2>
             <p style="margin-top: 10px; opacity: 0.9; font-size: 18px; font-weight: 500;">Tap anywhere to start</p>
             <p style="margin-top: 5px; opacity: 0.7; font-size: 14px;">Audio requires user interaction to initialize</p>
         </div>
@@ -39,7 +39,7 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1>🎛️ Hybrid Audio Workstation</h1>
+            <h1>ðŸŽ›ï¸ Hybrid Audio Workstation</h1>
             <p>Unified Loop Station + Sample Chopper with Real-time Processing</p>
         </header>
 
@@ -69,9 +69,9 @@
                     </select>
                 </div>
                 <div class="transport-group">
-                    <button class="btn btn-primary" id="master-play">▶ Play All</button>
-                    <button class="btn" id="master-stop">⏹ Stop All</button>
-                    <button class="btn" id="record-mode-toggle">🔴 Record Mode: REPLACE</button>
+                    <button class="btn btn-primary" id="master-play">â–¶ Play All</button>
+                    <button class="btn" id="master-stop">â¹ Stop All</button>
+                    <button class="btn" id="record-mode-toggle">ðŸ”´ Record Mode: REPLACE</button>
                 </div>
                 <div class="transport-group">
                     <label for="count-in-bars">Count-in:</label>
@@ -115,17 +115,17 @@
                     <span class="value-display" id="input-gain-display">100%</span>
                 </div>
                 <div class="transport-group">
-                    <button class="btn" id="metronome-toggle">🔇 Metronome</button>
+                    <button class="btn" id="metronome-toggle">ðŸ”‡ Metronome</button>
                     <label for="metronome-volume" class="sr-only">Metronome Volume</label>
                     <input type="range" id="metronome-volume" min="0" max="100" value="50" aria-label="Metronome Volume">
                 </div>
                 <div class="transport-group">
-                    <button class="btn btn-warning" id="system-audio-capture" title="Capture system audio">🎵 Capture System Audio</button>
-                    <button class="btn hidden" id="system-audio-stop">⏹ Stop Capture</button>
+                    <button class="btn btn-warning" id="system-audio-capture" title="Capture system audio">ðŸŽµ Capture System Audio</button>
+                    <button class="btn hidden" id="system-audio-stop">â¹ Stop Capture</button>
                 </div>
                 <div class="transport-group">
-                    <button class="btn btn-primary" id="mixdown-tracks" title="Mixdown all tracks">🎚️ MIXDOWN</button>
-                    <button class="btn hidden" id="undo-edit" title="Undo last edit">↶ UNDO</button>
+                    <button class="btn btn-primary" id="mixdown-tracks" title="Mixdown all tracks">ðŸŽšï¸ MIXDOWN</button>
+                    <button class="btn hidden" id="undo-edit" title="Undo last edit">â†¶ UNDO</button>
                 </div>
             </div>
             <!-- Quick Effects -->
@@ -162,7 +162,7 @@
             <!-- MPC-Style Pad Matrix -->
             <div class="mpc-container">
                 <div class="mpc-header">
-                    <h3>🎹 MPC Pads</h3>
+                    <h3>ðŸŽ¹ MPC Pads</h3>
                     <div class="mpc-controls">
                         <div class="mpc-mode-toggle">
                             <button class="mpc-mode-btn active" data-mode="slices">Slices</button>
@@ -206,15 +206,15 @@
                     <button class="btn mini-btn" id="chop-load">Load</button>
                     <label for="chop-file" class="sr-only">Load audio file for chopper</label>
                     <input type="file" id="chop-file" accept="audio/*" style="display:none" aria-label="Load audio file for chopper">
-                    <button class="btn mini-btn" id="chop-stop">⏹ Stop</button>
+                    <button class="btn mini-btn" id="chop-stop">â¹ Stop</button>
                     <button class="btn mini-btn" id="chop-manual-toggle">Manual Mode</button>
-                    <button class="btn mini-btn" id="chop-slice-button">🔪 SLICE</button>
+                    <button class="btn mini-btn" id="chop-slice-button">ðŸ”ª SLICE</button>
                     <button class="btn mini-btn" id="chop-clear-markers">Clear</button>
                 </div>
                 <div class="control-row">
                     <button class="btn mini-btn" id="chop-equal">Equal</button>
                     <button class="btn mini-btn" id="chop-detect">Detect</button>
-                    <button class="btn mini-btn btn-primary" id="chop-detect-beats" title="AI Beat Detection">🎯 Beats</button>
+                    <button class="btn mini-btn btn-primary" id="chop-detect-beats" title="AI Beat Detection">ðŸŽ¯ Beats</button>
                     <label class="control-label" for="chop-slices">Slices</label>
                     <input type="range" id="chop-slices" min="2" max="32" value="8">
                     <span class="value-display" id="chop-slices-display">8</span>
@@ -253,7 +253,7 @@
                     <button class="btn" id="manual-chop-btn">Manual Mode</button>
                     <button class="btn" id="chop-equal-main">Equal Slices</button>
                     <button class="btn" id="chop-detect-main">Auto Detect</button>
-                    <button class="btn btn-warning" id="chop-slice-main">⚡ Slice!</button>
+                    <button class="btn btn-warning" id="chop-slice-main">âš¡ Slice!</button>
                     <button class="btn" id="chop-clear-main">Clear All</button>
                 </div>
                 <div class="control-row">
@@ -311,6 +311,42 @@
             <div id="sequencer-controls"></div>
             <div id="sequencer-grid"></div>
         </div>
+
+        <!-- MIDI Controls -->
+        <div id="midi-controls">
+            <button class="btn" id="connect-midi-btn">Connect MIDI</button>
+            <button class="btn" id="show-midi-mapping-btn">MIDI Mapping</button>
+            <button class="btn" id="export-midi-mapping-btn">Export Mapping</button>
+            <button class="btn" id="import-midi-mapping-btn">Import Mapping</button>
+            <button class="btn" id="midi-monitor-btn" style="background:#0088ff">📊 MIDI Monitor</button>
+            <label for="import-midi-mapping-file" class="sr-only">Import MIDI mapping file</label>
+            <input type="file" id="import-midi-mapping-file" accept=".json" style="display:none;" aria-label="Import MIDI mapping file">
+        </div>
+
+        <!-- Project Management -->
+        <div id="project-controls">
+            <button class="btn" id="save-project-btn">💾 Save Project</button>
+            <button class="btn" id="load-project-btn">📂 Load Project</button>
+            <button class="btn" id="export-project-btn">📤 Export</button>
+            <button class="btn" id="new-project-btn">🆕 New</button>
+            <button class="btn btn-primary" id="ai-features-btn" style="background:linear-gradient(135deg,#ff00ff,#00ccff);">🤖 AI Features</button>
+        </div>
+
+    </div>
+
+    <!-- MIDI Monitor Panel -->
+    <div id="midi-monitor-panel" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0; color:#00ff88;">🎹 MIDI Monitor</h3>
+            <button id="midi-monitor-close" style="background:#ff4444; padding:4px 8px; border:none; border-radius:4px; color:#fff; cursor:pointer;">✕</button>
+        </div>
+        <div style="font-size:11px; opacity:0.7; margin-bottom:10px;">Live MIDI messages (last 20):</div>
+        <div id="midi-monitor-log" style="background:#000; padding:10px; border-radius:4px; font-family:monospace; font-size:11px; max-height:300px; overflow-y:auto;">
+            <div style="opacity:0.5">Waiting for MIDI messages...</div>
+        </div>
+        <div style="margin-top:10px; padding:8px; background:rgba(0,136,255,0.1); border-radius:4px; font-size:11px;">
+            <strong>Tip:</strong> Press pads on your MIDI controller to see messages here
+        </div>
     </div>
 
     <!-- Status Bar -->
@@ -336,40 +372,6 @@
         </div>
     </footer>
 
-    <!-- MIDI Controls -->
-    <div id="midi-controls">
-        <button class="btn" id="connect-midi-btn">Connect MIDI</button>
-        <button class="btn" id="show-midi-mapping-btn">MIDI Mapping</button>
-        <button class="btn" id="export-midi-mapping-btn">Export Mapping</button>
-        <button class="btn" id="import-midi-mapping-btn">Import Mapping</button>
-        <button class="btn" id="midi-monitor-btn" style="background:#0088ff">📊 MIDI Monitor</button>
-        <label for="import-midi-mapping-file" class="sr-only">Import MIDI mapping file</label>
-        <input type="file" id="import-midi-mapping-file" accept=".json" style="display:none;" aria-label="Import MIDI mapping file">
-    </div>
-    
-    <!-- MIDI Monitor Panel -->
-    <div id="midi-monitor-panel" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0; color:#00ff88;">🎹 MIDI Monitor</h3>
-            <button id="midi-monitor-close" style="background:#ff4444; padding:4px 8px; border:none; border-radius:4px; color:#fff; cursor:pointer;">✕</button>
-        </div>
-        <div style="font-size:11px; opacity:0.7; margin-bottom:10px;">Live MIDI messages (last 20):</div>
-        <div id="midi-monitor-log" style="background:#000; padding:10px; border-radius:4px; font-family:monospace; font-size:11px; max-height:300px; overflow-y:auto;">
-            <div style="opacity:0.5">Waiting for MIDI messages...</div>
-        </div>
-        <div style="margin-top:10px; padding:8px; background:rgba(0,136,255,0.1); border-radius:4px; font-size:11px;">
-            <strong>Tip:</strong> Press pads on your MIDI controller to see messages here
-        </div>
-    </div>
-
-    <!-- Project Management -->
-    <div id="project-controls" style="margin: 16px 0; display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn" id="save-project-btn">💾 Save Project</button>
-        <button class="btn" id="load-project-btn">📂 Load Project</button>
-        <button class="btn" id="export-project-btn">📤 Export</button>
-        <button class="btn" id="new-project-btn">🆕 New</button>
-        <button class="btn btn-primary" id="ai-features-btn" style="background:linear-gradient(135deg,#ff00ff,#00ccff);">🤖 AI Features</button>
-    </div>
 
     <!-- Main Application Script (ES6 Module) -->
     <script type="module" src="app.js"></script>
