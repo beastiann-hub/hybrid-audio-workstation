@@ -531,7 +531,7 @@ export function installTracksImpls(engine) {
     if (this.context.state === 'suspended') {
       console.log('Audio context suspended, attempting to resume...');
       this.context.resume().then(() => {
-        console.log('âœ… Audio context resumed, starting track playback');
+        console.log('✅ Audio context resumed, starting track playback');
         this._playTrackAfterResume(trackIndex);
       }).catch(e => {
         console.error('Failed to resume audio context:', e);

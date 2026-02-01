@@ -92,7 +92,7 @@ export async function ensureAudioContextRunning(engine) {
     console.log('Resuming suspended audio context...');
     try {
       await engine.context.resume();
-      console.log('âœ… Audio context resumed successfully, state:', engine.context.state);
+      console.log('✅ Audio context resumed successfully, state:', engine.context.state);
       // Update audio status indicator
       updateAudioStatusIndicator(engine);
       return true;
@@ -114,10 +114,10 @@ function updateAudioStatusIndicator(engine) {
   
   if (engine.context.state === 'running') {
     indicator.classList.add('active');
-    indicator.textContent = 'ðŸ”Š Audio Active';
+    indicator.textContent = '🔊 Audio Active';
   } else if (engine.context.state === 'suspended') {
     indicator.classList.remove('active');
-    indicator.textContent = 'ðŸ”‡ Audio Suspended';
+    indicator.textContent = '🔇 Audio Suspended';
   } else {
     indicator.classList.remove('active');
     indicator.textContent = 'âš ï¸ Audio Offline';

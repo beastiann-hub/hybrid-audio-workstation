@@ -40,7 +40,7 @@ function playAll() {
   if (this.context.state === 'suspended') {
     console.log('Audio context suspended, attempting to resume...');
     this.context.resume().then(() => {
-      console.log('âœ… Audio context resumed, continuing playback');
+      console.log('✅ Audio context resumed, continuing playback');
       this._playAllAfterResume();
     }).catch(e => {
       console.error('Failed to resume audio context:', e);
