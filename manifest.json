@@ -1,0 +1,50 @@
+{
+  "name": "Hybrid Audio Workstation",
+  "short_name": "HAW",
+  "description": "Professional web-based music production workstation with loop station, sample chopper, and step sequencer",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#00ff88",
+  "orientation": "landscape-primary",
+  "categories": ["music", "entertainment", "productivity"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23000' width='512' height='512' rx='128'/><text x='256' y='340' font-size='280' text-anchor='middle' fill='%2300ff88'>🎛️</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000' width='192' height='192' rx='48'/><text x='96' y='125' font-size='100' text-anchor='middle' fill='%2300ff88'>🎛️</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Loop Station",
+      "short_name": "Loops",
+      "description": "Open the loop recording station",
+      "url": "./index.html?mode=looper"
+    },
+    {
+      "name": "Sample Chopper",
+      "short_name": "Chopper",
+      "description": "Open the sample chopper",
+      "url": "./index.html?mode=chopper"
+    },
+    {
+      "name": "Sequencer",
+      "short_name": "Seq",
+      "description": "Open the step sequencer",
+      "url": "./index.html?mode=sequencer"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
