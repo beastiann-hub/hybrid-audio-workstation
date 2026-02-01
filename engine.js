@@ -995,16 +995,16 @@ Ready to proceed?`;
             
             const btn = document.getElementById('record-mode-toggle');
             if (btn) {
-                let icon, text, isWarning = false;
+                let text, isWarning = false;
                 switch(this.recordMode) {
                     case 'replace':
-                        icon = '[R]'; text = 'REPLACE'; break;
+                        text = 'REPLACE'; break;
                     case 'overdub':
-                        icon = '[O]'; text = 'OVERDUB'; isWarning = true; break;
+                        text = 'OVERDUB'; isWarning = true; break;
                     case 'play':
-                        icon = '[P]'; text = 'REC->PLAY'; break;
+                        text = 'REC->PLAY'; break;
                 }
-                btn.innerHTML = `${icon} Record Mode: ${text}`;
+                btn.innerHTML = `Record Mode: ${text}`;
                 btn.classList.toggle('btn-warning', isWarning);
             }
             this.updateStatus(`Record mode: ${this.recordMode.toUpperCase()}`);
@@ -1024,11 +1024,10 @@ Ready to proceed?`;
                 const btn = document.getElementById(`rec-btn-${trackIndex}`);
                 if (btn) {
                     if (track.isRecording) {
-                        btn.innerHTML = '[STOP]';
+                        btn.innerHTML = 'STOP';
                         btn.classList.add('active');
                     } else {
-                        const mode = this.recordMode === 'replace' ? '[R]' : '[O]';
-                        btn.innerHTML = `${mode} REC`;
+                        btn.innerHTML = 'REC';
                         btn.classList.remove('active');
                     }
                 }

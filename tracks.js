@@ -57,10 +57,10 @@ export function installTracksImpls(engine) {
           <div class="track-controls">
               <button class="btn mini-btn" onclick="engine.toggleMute(${trackIndex})" id="mute-btn-${trackIndex}" title="Mute track">M</button>
               <button class="btn mini-btn" onclick="engine.toggleSolo(${trackIndex})" id="solo-btn-${trackIndex}" title="Solo track">S</button>
-              <button class="btn mini-btn" onclick="engine.toggleRecording(${trackIndex})" id="rec-btn-${trackIndex}">[REC]</button>
-              <button class="btn mini-btn" onclick="engine.playTrack(${trackIndex})">[PLAY]</button>
-              <button class="btn mini-btn" onclick="engine.stopTrack(${trackIndex})">[STOP]</button>
-              <button class="btn mini-btn" onclick="engine.clearTrack(${trackIndex})">[CLR]</button>
+              <button class="btn mini-btn" onclick="engine.toggleRecording(${trackIndex})" id="rec-btn-${trackIndex}">REC</button>
+              <button class="btn mini-btn" onclick="engine.playTrack(${trackIndex})">PLAY</button>
+              <button class="btn mini-btn" onclick="engine.stopTrack(${trackIndex})">STOP</button>
+              <button class="btn mini-btn" onclick="engine.clearTrack(${trackIndex})">CLR</button>
           </div>
       </div>
       <div class="waveform-display">
@@ -107,14 +107,14 @@ export function installTracksImpls(engine) {
       </div>
       <div class="control-row">
           <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.splitTrackAtTime(${trackIndex})" title="Split track at current position">[SPLIT]</button>
-              <button class="btn mini-btn" onclick="engine.duplicateTrack(${trackIndex})" title="Duplicate to next empty track">[DUP]</button>
-              <button class="btn mini-btn" onclick="engine.reverseTrack(${trackIndex})" title="Reverse audio">[REV]</button>
+              <button class="btn mini-btn" onclick="engine.splitTrackAtTime(${trackIndex})" title="Split track at current position">SPLIT</button>
+              <button class="btn mini-btn" onclick="engine.duplicateTrack(${trackIndex})" title="Duplicate to next empty track">DUP</button>
+              <button class="btn mini-btn" onclick="engine.reverseTrack(${trackIndex})" title="Reverse audio">REV</button>
           </div>
           <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.normalizeTrack(${trackIndex})" title="Normalize volume">[NORM]</button>
-              <button class="btn mini-btn" onclick="engine.fadeInTrack(${trackIndex})" title="Apply fade in">[FADE IN]</button>
-              <button class="btn mini-btn" onclick="engine.fadeOutTrack(${trackIndex})" title="Apply fade out">[FADE OUT]</button>
+              <button class="btn mini-btn" onclick="engine.normalizeTrack(${trackIndex})" title="Normalize volume">NORM</button>
+              <button class="btn mini-btn" onclick="engine.fadeInTrack(${trackIndex})" title="Apply fade in">FADE IN</button>
+              <button class="btn mini-btn" onclick="engine.fadeOutTrack(${trackIndex})" title="Apply fade out">FADE OUT</button>
           </div>
       </div>
           <div class="control-row fx-controls">
@@ -311,7 +311,7 @@ export function installTracksImpls(engine) {
       
       const btn = document.getElementById(`rec-btn-${trackIndex}`);
       if (btn) {
-        btn.innerHTML = '[STOP]';
+        btn.innerHTML = 'STOP';
         btn.classList.add('active');
       }
       
@@ -416,8 +416,7 @@ export function installTracksImpls(engine) {
         if (card) card.classList.remove('recording');
         const btn = document.getElementById(`rec-btn-${trackIndex}`);
         if (btn) {
-          const mode = this.recordMode === 'replace' ? '[R]' : '[O]';
-          btn.innerHTML = `${mode} REC`;
+          btn.innerHTML = 'REC';
           btn.classList.remove('active');
         }
         return;
@@ -464,8 +463,7 @@ export function installTracksImpls(engine) {
     
     const btn = document.getElementById(`rec-btn-${trackIndex}`);
     if (btn) {
-      const mode = this.recordMode === 'replace' ? '[R]' : this.recordMode === 'overdub' ? '[O]' : '[P]';
-      btn.innerHTML = `${mode} REC`;
+      btn.innerHTML = 'REC';
       btn.classList.remove('active');
     }
     
