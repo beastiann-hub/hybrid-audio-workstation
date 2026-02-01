@@ -657,8 +657,6 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
                     `;
                 }
             }
-            
-                    }
 
         // Re-render sequencer rows
         this.renderSequencer();
