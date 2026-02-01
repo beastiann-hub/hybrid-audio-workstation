@@ -547,7 +547,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             const sensPercent = (sensitivity * 100).toFixed(0);
             const avgConfidence = selectedTransients.length > 0 ? 
                 (selectedTransients.reduce((sum, t) => sum + t.confidence, 0) / selectedTransients.length).toFixed(1) : 0;
-            this.updateStatus(`Ã°Å¸Å½Â¯ Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
+            this.updateStatus(`Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
         }
         
         renderChopperPads() {
@@ -661,7 +661,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
         // Re-render sequencer rows
         this.renderSequencer();
 
-        // Ã°Å¸â€â€˜ Make sure the MPC sees the new samples in the sample bank
+        // Make sure the MPC sees the new samples in the sample bank
         if (this.updateMPCPadLabels) {
             this.updateMPCPadLabels();
         }
@@ -728,7 +728,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
                     // Update rec button
                     const recBtn = document.getElementById(`rec-btn-${i}`);
                     if (recBtn) {
-                        recBtn.innerHTML = 'Ã¢ÂÂº REC';
+                        recBtn.innerHTML = '[REC]';
                         recBtn.classList.remove('active');
                     }
                 }
@@ -863,7 +863,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             document.getElementById('metronome-toggle')?.addEventListener('click', () => {
                 this.metronomeEnabled = !this.metronomeEnabled;
                 const btn = document.getElementById('metronome-toggle');
-                btn.textContent = this.metronomeEnabled ? 'Ã°Å¸â€Å  Metronome' : 'Ã°Å¸â€â€¡ Metronome';
+                btn.textContent = this.metronomeEnabled ? 'Metronome' : 'Metronome';
                 if (this.metronomeEnabled) {
                     this.startMetronome();
                 } else {
@@ -880,7 +880,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             // System audio capture
             document.getElementById('system-audio-capture')?.addEventListener('click', async () => {
                 // Show user instructions
-                const confirmMessage = `Ã°Å¸Å½Âµ SYSTEM AUDIO CAPTURE INSTRUCTIONS:
+                const confirmMessage = `SYSTEM AUDIO CAPTURE INSTRUCTIONS:
 
 1. Click OK to open the screen sharing dialog
 2. Select a browser tab or application window that's playing audio
@@ -998,11 +998,11 @@ Ready to proceed?`;
                 let icon, text, isWarning = false;
                 switch(this.recordMode) {
                     case 'replace':
-                        icon = 'Ã°Å¸â€Â´'; text = 'REPLACE'; break;
+                        icon = '[R]'; text = 'REPLACE'; break;
                     case 'overdub':
-                        icon = 'Ã°Å¸Å¸Â '; text = 'OVERDUB'; isWarning = true; break;
+                        icon = '[O]'; text = 'OVERDUB'; isWarning = true; break;
                     case 'play':
-                        icon = 'Ã¢â€“Â¶Ã¯Â¸Â'; text = 'RECÃ¢â€ â€™PLAY'; break;
+                        icon = '[P]'; text = 'REC->PLAY'; break;
                 }
                 btn.innerHTML = `${icon} Record Mode: ${text}`;
                 btn.classList.toggle('btn-warning', isWarning);
@@ -1024,10 +1024,10 @@ Ready to proceed?`;
                 const btn = document.getElementById(`rec-btn-${trackIndex}`);
                 if (btn) {
                     if (track.isRecording) {
-                        btn.innerHTML = 'Ã¢ÂÂ¹ STOP';
+                        btn.innerHTML = '[STOP]';
                         btn.classList.add('active');
                     } else {
-                        const mode = this.recordMode === 'replace' ? 'Ã¢ÂÂº' : 'Ã°Å¸Å¸Â ';
+                        const mode = this.recordMode === 'replace' ? '[R]' : '[O]';
                         btn.innerHTML = `${mode} REC`;
                         btn.classList.remove('active');
                     }
@@ -1052,7 +1052,7 @@ Ready to proceed?`;
         async startSystemAudioCapture() {
             try {
                 // Show user guidance before attempting capture
-                this.updateStatus('Ã°Å¸â€œÂº Select a browser tab or window with audio to capture...');
+                this.updateStatus('Select a browser tab or window with audio to capture...');
                 
                 // Request screen/tab share with audio - this will show a dialog to select what to share
                 this.systemAudioStream = await navigator.mediaDevices.getDisplayMedia({
@@ -1088,12 +1088,12 @@ Ready to proceed?`;
                 const videoTracks = this.systemAudioStream.getVideoTracks();
                 videoTracks.forEach(track => track.stop());
                 
-                this.updateStatus('Ã¢Å“â€¦ System audio capture started - Ready to record internal sound');
+                this.updateStatus('System audio capture started - Ready to record internal sound');
                 return true;
             } catch (error) {
                 console.error('Failed to start system audio capture:', error);
                 
-                let errorMessage = 'Ã¢ÂÅ’ System audio capture failed: ';
+                let errorMessage = 'System audio capture failed: ';
                 
                 if (error.name === 'NotAllowedError') {
                     errorMessage += 'Permission denied. Please allow screen sharing and select "Share audio" option.';
@@ -1212,7 +1212,7 @@ Ready to proceed?`;
             if (startInput) startInput.value = '0';
             if (endInput) endInput.value = '';
             
-            this.updateStatus(`Ã¢Å“â€¦ Track ${trackIndex + 1} trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
+            this.updateStatus(`Track ${trackIndex + 1} trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
         }
         
         // ===== MIXDOWN FUNCTION =====
@@ -1298,7 +1298,7 @@ Ready to proceed?`;
                 // Put mixdown in empty track
                 this.tracks[emptyIndex].buffer = mixBuffer;
                 this.drawWaveform(emptyIndex, mixBuffer);
-                this.updateStatus(`Mixdown Ã¢â€ â€™ Track ${emptyIndex + 1} (${trackCount} tracks, ${mixBuffer.duration.toFixed(2)}s)`);
+                this.updateStatus(`Mixdown -> Track ${emptyIndex + 1} (${trackCount} tracks, ${mixBuffer.duration.toFixed(2)}s)`);
             }
         }
         
@@ -1398,7 +1398,7 @@ Ready to proceed?`;
             if (startInput) startInput.value = '0';
             if (endInput) endInput.value = '';
             
-            this.updateStatus(`Ã¢Å“â€¦ Chopper trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
+            this.updateStatus(`Chopper trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
         }
         
         // Visual trim controls helpers
@@ -1678,7 +1678,7 @@ Ready to proceed?`;
                     this.createEqualSlices();
                 }
                 
-                this.updateStatus(`Ã°Å¸Å½Â¯ Applied ${preset.replace('-', ' ')} preset: ${settings.description}`);
+                this.updateStatus(`Applied ${preset.replace('-', ' ')} preset: ${settings.description}`);
             }
         }
         
@@ -1850,7 +1850,7 @@ Ready to proceed?`;
                 const label = document.createElement('div');
                 label.className = 'seq-row-label';
                 const slotIdx = this.sequencer.rowSample[r];
-                label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'Ã¢â‚¬â€'}</div></div>`;
+                label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'--'}</div></div>`;
                 
                 const ctrls = document.createElement('div');
                 ctrls.className='seq-row-controls';

@@ -40,7 +40,7 @@ function playAll() {
   if (this.context.state === 'suspended') {
     console.log('Audio context suspended, attempting to resume...');
     this.context.resume().then(() => {
-      console.log('✅ Audio context resumed, continuing playback');
+      console.log('âœ… Audio context resumed, continuing playback');
       this._playAllAfterResume();
     }).catch(e => {
       console.error('Failed to resume audio context:', e);
@@ -230,7 +230,7 @@ function renderSequencer() {
     const label = document.createElement('div');
     label.className = 'seq-row-label';
     const slotIdx = this.sequencer.rowSample[r];
-    label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'â€”'}</div></div>`;
+    label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'--'}</div></div>`;
 
     const ctrls = document.createElement('div');
     ctrls.className='seq-row-controls';

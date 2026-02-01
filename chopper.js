@@ -451,13 +451,13 @@ if (toMPCBtn) {
       this.createSlicesFromMarkers();
       this.renderChopperPads();
       this.renderChopperPadsMain();
-      this.updateStatus(`ðŸŽ¯ Smart Slice: Used ${this.chopper.sliceMarkers.length} manual markers`);
+      this.updateStatus(`Smart Slice: Used ${this.chopper.sliceMarkers.length} manual markers`);
       return;
     }
     if (this.chopper.manualMode) {
       if (confirm('No manual markers set. Switch to auto-detect transients?')) {
         this.detectTransients();
-        this.updateStatus('ðŸŽ¯ Smart Slice: Auto-detected transients');
+        this.updateStatus('Smart Slice: Auto-detected transients');
       } else {
         this.updateStatus('Smart Slice cancelled - add markers or disable manual mode');
       }
@@ -466,11 +466,11 @@ if (toMPCBtn) {
     const originalSliceCount = this.chopper.slices.length;
     this.detectTransients();
     if (this.chopper.slices.length < 4) {
-      this.updateStatus('ðŸŽ¯ Smart Slice: Few transients found, using equal slices...');
+      this.updateStatus('Smart Slice: Few transients found, using equal slices...');
       this.createEqualSlices();
-      this.updateStatus(`ðŸŽ¯ Smart Slice: Created ${this.chopper.numSlices} equal slices (transient detection found too few)`);
+      this.updateStatus(`Smart Slice: Created ${this.chopper.numSlices} equal slices (transient detection found too few)`);
     } else {
-      this.updateStatus(`ðŸŽ¯ Smart Slice: Auto-detected ${this.chopper.slices.length} transient-based slices`);
+      this.updateStatus(`Smart Slice: Auto-detected ${this.chopper.slices.length} transient-based slices`);
     }
     this.renderChopperPads();
     this.renderChopperPadsMain();
@@ -632,7 +632,7 @@ if (toMPCBtn) {
     const selectedTransients = transientCandidates.slice(0, maxTransients);
     selectedTransients.sort((a,b)=>a.time - b.time);
     this.chopper.sliceMarkers = [0, ...selectedTransients.map(t=>t.time)]; this.chopper.slices = []; const allMarkers = [...this.chopper.sliceMarkers, this.chopper.buffer.duration]; for (let i=0;i<allMarkers.length-1;i++){ const start = allMarkers[i]; const end = allMarkers[i+1]; this.chopper.slices.push({ start, end }); }
-    this.drawChopperWaveform(); this.drawChopperWaveformMain(); this.renderChopperPads(); this.renderChopperPadsMain(); const sensPercent = (sensitivity*100).toFixed(0); const avgConfidence = selectedTransients.length>0 ? (selectedTransients.reduce((sum,t)=>sum+t.confidence,0)/selectedTransients.length).toFixed(1) : 0; this.updateStatus(`ðŸŽ¯ Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
+    this.drawChopperWaveform(); this.drawChopperWaveformMain(); this.renderChopperPads(); this.renderChopperPadsMain(); const sensPercent = (sensitivity*100).toFixed(0); const avgConfidence = selectedTransients.length>0 ? (selectedTransients.reduce((sum,t)=>sum+t.confidence,0)/selectedTransients.length).toFixed(1) : 0; this.updateStatus(`Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
   }
 
   function renderChopperPads() {
@@ -645,7 +645,7 @@ if (toMPCBtn) {
     if (this.context.state === 'suspended') {
       console.log('Audio context suspended, attempting to resume...');
       this.context.resume().then(() => {
-        console.log('✅ Audio context resumed, playing slice');
+        console.log('âœ… Audio context resumed, playing slice');
         this._playSliceAfterResume(index);
       }).catch(e => {
         console.error('Failed to resume audio context:', e);
@@ -686,7 +686,7 @@ if (toMPCBtn) {
   function slicesToLoopTracks() {
     if (!this.chopper.buffer || this.chopper.slices.length===0) { this.updateStatus('No chopped samples to send'); return; }
     const numSlices = this.chopper.slices.length; const availableTracks = this.maxTracks; const slicesToSend = Math.min(numSlices, availableTracks);
-    for (let i=0;i<slicesToSend;i++){ const slice=this.chopper.slices[i]; if (!slice) continue; const duration = slice.end - slice.start; const startSample = Math.floor(slice.start * this.context.sampleRate); const endSample = Math.floor(slice.end * this.context.sampleRate); const length = endSample - startSample; const sliceBuffer = this.context.createBuffer(1, length, this.context.sampleRate); const sourceData = this.chopper.buffer.getChannelData(0); const sliceData = sliceBuffer.getChannelData(0); for (let j=0;j<length;j++) sliceData[j] = sourceData[startSample + j] || 0; const track = this.tracks[i]; track.buffer = sliceBuffer; track.chunks = []; track.isRecording = false; track.isPlaying = false; if (track.source) { track.source.stop(); track.source = null; } this.drawWaveform(i, sliceBuffer); const card = document.getElementById(`track-${i}`); if (card) { card.classList.remove('recording'); const recBtn = document.getElementById(`rec-btn-${i}`); if (recBtn) { recBtn.innerHTML = 'âº REC'; recBtn.classList.remove('active'); } } }
+    for (let i=0;i<slicesToSend;i++){ const slice=this.chopper.slices[i]; if (!slice) continue; const duration = slice.end - slice.start; const startSample = Math.floor(slice.start * this.context.sampleRate); const endSample = Math.floor(slice.end * this.context.sampleRate); const length = endSample - startSample; const sliceBuffer = this.context.createBuffer(1, length, this.context.sampleRate); const sourceData = this.chopper.buffer.getChannelData(0); const sliceData = sliceBuffer.getChannelData(0); for (let j=0;j<length;j++) sliceData[j] = sourceData[startSample + j] || 0; const track = this.tracks[i]; track.buffer = sliceBuffer; track.chunks = []; track.isRecording = false; track.isPlaying = false; if (track.source) { track.source.stop(); track.source = null; } this.drawWaveform(i, sliceBuffer); const card = document.getElementById(`track-${i}`); if (card) { card.classList.remove('recording'); const recBtn = document.getElementById(`rec-btn-${i}`); if (recBtn) { recBtn.innerHTML = '[REC]'; recBtn.classList.remove('active'); } } }
     const unifiedBtn = document.querySelector('[data-mode="unified"]'); if (unifiedBtn) unifiedBtn.click(); this.updateStatus(`Sent ${slicesToSend} slices to loop tracks - Ready to play and layer!`);
   }
 

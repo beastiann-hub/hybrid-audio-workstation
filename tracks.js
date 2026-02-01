@@ -57,10 +57,10 @@ export function installTracksImpls(engine) {
           <div class="track-controls">
               <button class="btn mini-btn" onclick="engine.toggleMute(${trackIndex})" id="mute-btn-${trackIndex}" title="Mute track">M</button>
               <button class="btn mini-btn" onclick="engine.toggleSolo(${trackIndex})" id="solo-btn-${trackIndex}" title="Solo track">S</button>
-              <button class="btn mini-btn" onclick="engine.toggleRecording(${trackIndex})" id="rec-btn-${trackIndex}">âº REC</button>
-              <button class="btn mini-btn" onclick="engine.playTrack(${trackIndex})">â–¶ PLAY</button>
-              <button class="btn mini-btn" onclick="engine.stopTrack(${trackIndex})">â¹ STOP</button>
-              <button class="btn mini-btn" onclick="engine.clearTrack(${trackIndex})">âœ• CLR</button>
+              <button class="btn mini-btn" onclick="engine.toggleRecording(${trackIndex})" id="rec-btn-${trackIndex}">[REC]</button>
+              <button class="btn mini-btn" onclick="engine.playTrack(${trackIndex})">[PLAY]</button>
+              <button class="btn mini-btn" onclick="engine.stopTrack(${trackIndex})">[STOP]</button>
+              <button class="btn mini-btn" onclick="engine.clearTrack(${trackIndex})">[CLR]</button>
           </div>
       </div>
       <div class="waveform-display">
@@ -107,14 +107,14 @@ export function installTracksImpls(engine) {
       </div>
       <div class="control-row">
           <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.splitTrackAtTime(${trackIndex})" title="Split track at current position">âœ‚ SPLIT</button>
-              <button class="btn mini-btn" onclick="engine.duplicateTrack(${trackIndex})" title="Duplicate to next empty track">âŽ˜ DUP</button>
-              <button class="btn mini-btn" onclick="engine.reverseTrack(${trackIndex})" title="Reverse audio">â†¶ REV</button>
+              <button class="btn mini-btn" onclick="engine.splitTrackAtTime(${trackIndex})" title="Split track at current position">[SPLIT]</button>
+              <button class="btn mini-btn" onclick="engine.duplicateTrack(${trackIndex})" title="Duplicate to next empty track">[DUP]</button>
+              <button class="btn mini-btn" onclick="engine.reverseTrack(${trackIndex})" title="Reverse audio">[REV]</button>
           </div>
           <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.normalizeTrack(${trackIndex})" title="Normalize volume">ðŸ“Š NORM</button>
-              <button class="btn mini-btn" onclick="engine.fadeInTrack(${trackIndex})" title="Apply fade in">â†— FADE IN</button>
-              <button class="btn mini-btn" onclick="engine.fadeOutTrack(${trackIndex})" title="Apply fade out">â†˜ FADE OUT</button>
+              <button class="btn mini-btn" onclick="engine.normalizeTrack(${trackIndex})" title="Normalize volume">[NORM]</button>
+              <button class="btn mini-btn" onclick="engine.fadeInTrack(${trackIndex})" title="Apply fade in">[FADE IN]</button>
+              <button class="btn mini-btn" onclick="engine.fadeOutTrack(${trackIndex})" title="Apply fade out">[FADE OUT]</button>
           </div>
       </div>
           <div class="control-row fx-controls">
@@ -311,7 +311,7 @@ export function installTracksImpls(engine) {
       
       const btn = document.getElementById(`rec-btn-${trackIndex}`);
       if (btn) {
-        btn.innerHTML = 'â¹ STOP';
+        btn.innerHTML = '[STOP]';
         btn.classList.add('active');
       }
       
@@ -416,7 +416,7 @@ export function installTracksImpls(engine) {
         if (card) card.classList.remove('recording');
         const btn = document.getElementById(`rec-btn-${trackIndex}`);
         if (btn) {
-          const mode = this.recordMode === 'replace' ? 'âº' : 'ðŸŸ ';
+          const mode = this.recordMode === 'replace' ? '[R]' : '[O]';
           btn.innerHTML = `${mode} REC`;
           btn.classList.remove('active');
         }
@@ -453,7 +453,7 @@ export function installTracksImpls(engine) {
             this.timerID = null;
           }
           const btn = document.getElementById('metronome-toggle');
-          if (btn) btn.textContent = 'ðŸ”‡ Metronome';
+          if (btn) btn.textContent = 'Metronome';
         }
         setTimeout(() => this.playTrack(trackIndex), 100);
       }
@@ -464,7 +464,7 @@ export function installTracksImpls(engine) {
     
     const btn = document.getElementById(`rec-btn-${trackIndex}`);
     if (btn) {
-      const mode = this.recordMode === 'replace' ? 'âº' : this.recordMode === 'overdub' ? 'ðŸŸ ' : 'â–¶ï¸';
+      const mode = this.recordMode === 'replace' ? '[R]' : this.recordMode === 'overdub' ? '[O]' : '[P]';
       btn.innerHTML = `${mode} REC`;
       btn.classList.remove('active');
     }
@@ -533,7 +533,7 @@ export function installTracksImpls(engine) {
     if (this.context.state === 'suspended') {
       console.log('Audio context suspended, attempting to resume...');
       this.context.resume().then(() => {
-        console.log('✅ Audio context resumed, starting track playback');
+        console.log('âœ… Audio context resumed, starting track playback');
         this._playTrackAfterResume(trackIndex);
       }).catch(e => {
         console.error('Failed to resume audio context:', e);
