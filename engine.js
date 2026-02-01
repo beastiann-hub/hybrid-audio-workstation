@@ -547,7 +547,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             const sensPercent = (sensitivity * 100).toFixed(0);
             const avgConfidence = selectedTransients.length > 0 ? 
                 (selectedTransients.reduce((sum, t) => sum + t.confidence, 0) / selectedTransients.length).toFixed(1) : 0;
-            this.updateStatus(`ðŸŽ¯ Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
+            this.updateStatus(`Ã°Å¸Å½Â¯ Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
         }
         
         renderChopperPads() {
@@ -661,7 +661,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
         // Re-render sequencer rows
         this.renderSequencer();
 
-        // ðŸ”‘ Make sure the MPC sees the new samples in the sample bank
+        // Ã°Å¸â€â€˜ Make sure the MPC sees the new samples in the sample bank
         if (this.updateMPCPadLabels) {
             this.updateMPCPadLabels();
         }
@@ -728,7 +728,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
                     // Update rec button
                     const recBtn = document.getElementById(`rec-btn-${i}`);
                     if (recBtn) {
-                        recBtn.innerHTML = 'âº REC';
+                        recBtn.innerHTML = 'Ã¢ÂÂº REC';
                         recBtn.classList.remove('active');
                     }
                 }
@@ -802,68 +802,68 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             });
             
             // Master controls
-            document.getElementById('master-bpm').addEventListener('change', (e) => {
+            document.getElementById('master-bpm')?.addEventListener('change', (e) => {
                 this.bpm = parseInt(e.target.value);
                 this.effects.delay.delayTime.value = 60 / this.bpm * 0.25;
                 this.updateStatus(`BPM set to ${this.bpm}`);
             });
             
-            document.getElementById('master-bars').addEventListener('change', (e) => {
+            document.getElementById('master-bars')?.addEventListener('change', (e) => {
                 this.bars = parseInt(e.target.value);
                 this.updateStatus(`Bars set to ${this.bars}`);
             });
             
-            document.getElementById('master-volume').addEventListener('input', (e) => {
+            document.getElementById('master-volume')?.addEventListener('input', (e) => {
                 const value = e.target.value / 100;
                 this.masterGain.gain.value = value;
                 document.getElementById('master-volume-display').textContent = `${e.target.value}%`;
             });
             
-            document.getElementById('input-gain').addEventListener('input', (e) => {
+            document.getElementById('input-gain')?.addEventListener('input', (e) => {
                 const value = e.target.value / 100;
                 if (this.inputGain) this.inputGain.gain.value = value;
                 document.getElementById('input-gain-display').textContent = `${e.target.value}%`;
             });
             
             // Master transport
-            document.getElementById('master-play').addEventListener('click', () => this.playAll());
-            document.getElementById('master-stop').addEventListener('click', () => this.stopAll());
+            document.getElementById('master-play')?.addEventListener('click', () => this.playAll());
+            document.getElementById('master-stop')?.addEventListener('click', () => this.stopAll());
             
             // Record mode toggle
-            document.getElementById('record-mode-toggle').addEventListener('click', () => this.toggleRecordMode());
+            document.getElementById('record-mode-toggle')?.addEventListener('click', () => this.toggleRecordMode());
             
             // Count-in and first track bars
-            document.getElementById('count-in-bars').addEventListener('change', (e) => {
+            document.getElementById('count-in-bars')?.addEventListener('change', (e) => {
                 this.countInBars = parseInt(e.target.value);
                 this.updateStatus(`Count-in set to ${this.countInBars} bar(s)`);
             });
             
-            document.getElementById('count-in-first-only').addEventListener('change', (e) => {
+            document.getElementById('count-in-first-only')?.addEventListener('change', (e) => {
                 this.countInFirstTrackOnly = e.target.checked;
                 this.updateStatus(`Count-in ${this.countInFirstTrackOnly ? 'first track only' : 'all tracks'}`);
             });
 
-            document.getElementById('metronome-during-recording').addEventListener('change', (e) => {
+            document.getElementById('metronome-during-recording')?.addEventListener('change', (e) => {
                 this.metronomeDuringRecording = e.target.checked;
                 this.updateStatus(`Metronome during recording: ${this.metronomeDuringRecording ? 'ON' : 'OFF'}`);
             });
 
-            document.getElementById('first-track-bars').addEventListener('change', (e) => {
+            document.getElementById('first-track-bars')?.addEventListener('change', (e) => {
                 this.firstTrackBars = parseInt(e.target.value);
                 this.updateStatus(`First track length set to ${this.firstTrackBars} bar(s)`);
             });            // Tap tempo
-            document.getElementById('tap-tempo').addEventListener('click', () => this.tapTempo());
+            document.getElementById('tap-tempo')?.addEventListener('click', () => this.tapTempo());
             
             // Quantize
-            document.getElementById('quantize-enabled').addEventListener('change', (e) => {
+            document.getElementById('quantize-enabled')?.addEventListener('change', (e) => {
                 this.quantize = e.target.checked;
             });
             
             // Metronome
-            document.getElementById('metronome-toggle').addEventListener('click', () => {
+            document.getElementById('metronome-toggle')?.addEventListener('click', () => {
                 this.metronomeEnabled = !this.metronomeEnabled;
                 const btn = document.getElementById('metronome-toggle');
-                btn.textContent = this.metronomeEnabled ? 'ðŸ”Š Metronome' : 'ðŸ”‡ Metronome';
+                btn.textContent = this.metronomeEnabled ? 'Ã°Å¸â€Å  Metronome' : 'Ã°Å¸â€â€¡ Metronome';
                 if (this.metronomeEnabled) {
                     this.startMetronome();
                 } else {
@@ -871,16 +871,16 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
                 }
             });
             
-            document.getElementById('metronome-volume').addEventListener('input', (e) => {
+            document.getElementById('metronome-volume')?.addEventListener('input', (e) => {
                 if (this.metGain) {
                     this.metGain.gain.value = e.target.value / 100 * 0.5;
                 }
             });
             
             // System audio capture
-            document.getElementById('system-audio-capture').addEventListener('click', async () => {
+            document.getElementById('system-audio-capture')?.addEventListener('click', async () => {
                 // Show user instructions
-                const confirmMessage = `ðŸŽµ SYSTEM AUDIO CAPTURE INSTRUCTIONS:
+                const confirmMessage = `Ã°Å¸Å½Âµ SYSTEM AUDIO CAPTURE INSTRUCTIONS:
 
 1. Click OK to open the screen sharing dialog
 2. Select a browser tab or application window that's playing audio
@@ -903,7 +903,7 @@ Ready to proceed?`;
                 }
             });
             
-            document.getElementById('system-audio-stop').addEventListener('click', () => {
+            document.getElementById('system-audio-stop')?.addEventListener('click', () => {
                 this.stopSystemAudioCapture();
                 document.getElementById('system-audio-capture').style.display = 'inline-block';
                 document.getElementById('system-audio-stop').style.display = 'none';
@@ -911,36 +911,36 @@ Ready to proceed?`;
             });
             
             // Studio features
-            document.getElementById('mixdown-tracks').addEventListener('click', () => this.mixdownTracks());
-            document.getElementById('undo-edit').addEventListener('click', () => this.undoLastEdit());
+            document.getElementById('mixdown-tracks')?.addEventListener('click', () => this.mixdownTracks());
+            document.getElementById('undo-edit')?.addEventListener('click', () => this.undoLastEdit());
             
             // Quick effects
-            document.getElementById('quick-reverb').addEventListener('input', (e) => {
+            document.getElementById('quick-reverb')?.addEventListener('input', (e) => {
                 const value = e.target.value / 100;
                 this.effects.reverbSend.gain.value = value;
                 e.target.nextElementSibling.textContent = `${e.target.value}%`;
             });
             
-            document.getElementById('quick-delay').addEventListener('input', (e) => {
+            document.getElementById('quick-delay')?.addEventListener('input', (e) => {
                 const value = e.target.value / 100;
                 this.effects.delaySend.gain.value = value;
                 e.target.nextElementSibling.textContent = `${e.target.value}%`;
             });
             
-            document.getElementById('quick-filter').addEventListener('input', (e) => {
+            document.getElementById('quick-filter')?.addEventListener('input', (e) => {
                 const value = e.target.value / 100;
                 this.effects.filter.frequency.value = 200 + (value * 19800);
                 e.target.nextElementSibling.textContent = `${e.target.value}%`;
             });
             
             // Initialize properties from UI elements
-            this.bpm = parseInt(document.getElementById('master-bpm').value) || 120;
-            this.bars = parseInt(document.getElementById('master-bars').value) || 4;
-            this.countInBars = parseInt(document.getElementById('count-in-bars').value) || 1;
-            this.firstTrackBars = parseInt(document.getElementById('first-track-bars').value) || 4;
-            this.countInFirstTrackOnly = document.getElementById('count-in-first-only').checked;
-            this.metronomeDuringRecording = document.getElementById('metronome-during-recording').checked;
-            this.quantize = document.getElementById('quantize-enabled').checked;
+            this.bpm = parseInt(document.getElementById('master-bpm')?.value) || 120;
+            this.bars = parseInt(document.getElementById('master-bars')?.value) || 4;
+            this.countInBars = parseInt(document.getElementById('count-in-bars')?.value) || 1;
+            this.firstTrackBars = parseInt(document.getElementById('first-track-bars')?.value) || 4;
+            this.countInFirstTrackOnly = document.getElementById('count-in-first-only')?.checked ?? true;
+            this.metronomeDuringRecording = document.getElementById('metronome-during-recording')?.checked ?? true;
+            this.quantize = document.getElementById('quantize-enabled')?.checked ?? false;
             this.recordMode = 'replace';
             this.metronomeEnabled = false;
             this.metronomeRunning = false;
@@ -998,11 +998,11 @@ Ready to proceed?`;
                 let icon, text, isWarning = false;
                 switch(this.recordMode) {
                     case 'replace':
-                        icon = 'ðŸ”´'; text = 'REPLACE'; break;
+                        icon = 'Ã°Å¸â€Â´'; text = 'REPLACE'; break;
                     case 'overdub':
-                        icon = 'ðŸŸ '; text = 'OVERDUB'; isWarning = true; break;
+                        icon = 'Ã°Å¸Å¸Â '; text = 'OVERDUB'; isWarning = true; break;
                     case 'play':
-                        icon = 'â–¶ï¸'; text = 'RECâ†’PLAY'; break;
+                        icon = 'Ã¢â€“Â¶Ã¯Â¸Â'; text = 'RECÃ¢â€ â€™PLAY'; break;
                 }
                 btn.innerHTML = `${icon} Record Mode: ${text}`;
                 btn.classList.toggle('btn-warning', isWarning);
@@ -1024,10 +1024,10 @@ Ready to proceed?`;
                 const btn = document.getElementById(`rec-btn-${trackIndex}`);
                 if (btn) {
                     if (track.isRecording) {
-                        btn.innerHTML = 'â¹ STOP';
+                        btn.innerHTML = 'Ã¢ÂÂ¹ STOP';
                         btn.classList.add('active');
                     } else {
-                        const mode = this.recordMode === 'replace' ? 'âº' : 'ðŸŸ ';
+                        const mode = this.recordMode === 'replace' ? 'Ã¢ÂÂº' : 'Ã°Å¸Å¸Â ';
                         btn.innerHTML = `${mode} REC`;
                         btn.classList.remove('active');
                     }
@@ -1052,7 +1052,7 @@ Ready to proceed?`;
         async startSystemAudioCapture() {
             try {
                 // Show user guidance before attempting capture
-                this.updateStatus('ðŸ“º Select a browser tab or window with audio to capture...');
+                this.updateStatus('Ã°Å¸â€œÂº Select a browser tab or window with audio to capture...');
                 
                 // Request screen/tab share with audio - this will show a dialog to select what to share
                 this.systemAudioStream = await navigator.mediaDevices.getDisplayMedia({
@@ -1088,12 +1088,12 @@ Ready to proceed?`;
                 const videoTracks = this.systemAudioStream.getVideoTracks();
                 videoTracks.forEach(track => track.stop());
                 
-                this.updateStatus('âœ… System audio capture started - Ready to record internal sound');
+                this.updateStatus('Ã¢Å“â€¦ System audio capture started - Ready to record internal sound');
                 return true;
             } catch (error) {
                 console.error('Failed to start system audio capture:', error);
                 
-                let errorMessage = 'âŒ System audio capture failed: ';
+                let errorMessage = 'Ã¢ÂÅ’ System audio capture failed: ';
                 
                 if (error.name === 'NotAllowedError') {
                     errorMessage += 'Permission denied. Please allow screen sharing and select "Share audio" option.';
@@ -1212,7 +1212,7 @@ Ready to proceed?`;
             if (startInput) startInput.value = '0';
             if (endInput) endInput.value = '';
             
-            this.updateStatus(`âœ… Track ${trackIndex + 1} trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
+            this.updateStatus(`Ã¢Å“â€¦ Track ${trackIndex + 1} trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
         }
         
         // ===== MIXDOWN FUNCTION =====
@@ -1298,7 +1298,7 @@ Ready to proceed?`;
                 // Put mixdown in empty track
                 this.tracks[emptyIndex].buffer = mixBuffer;
                 this.drawWaveform(emptyIndex, mixBuffer);
-                this.updateStatus(`Mixdown â†’ Track ${emptyIndex + 1} (${trackCount} tracks, ${mixBuffer.duration.toFixed(2)}s)`);
+                this.updateStatus(`Mixdown Ã¢â€ â€™ Track ${emptyIndex + 1} (${trackCount} tracks, ${mixBuffer.duration.toFixed(2)}s)`);
             }
         }
         
@@ -1398,7 +1398,7 @@ Ready to proceed?`;
             if (startInput) startInput.value = '0';
             if (endInput) endInput.value = '';
             
-            this.updateStatus(`âœ… Chopper trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
+            this.updateStatus(`Ã¢Å“â€¦ Chopper trim applied - New length: ${newBuffer.duration.toFixed(2)}s (was ${originalBuffer.duration.toFixed(2)}s)`);
         }
         
         // Visual trim controls helpers
@@ -1678,7 +1678,7 @@ Ready to proceed?`;
                     this.createEqualSlices();
                 }
                 
-                this.updateStatus(`ðŸŽ¯ Applied ${preset.replace('-', ' ')} preset: ${settings.description}`);
+                this.updateStatus(`Ã°Å¸Å½Â¯ Applied ${preset.replace('-', ' ')} preset: ${settings.description}`);
             }
         }
         
@@ -1850,7 +1850,7 @@ Ready to proceed?`;
                 const label = document.createElement('div');
                 label.className = 'seq-row-label';
                 const slotIdx = this.sequencer.rowSample[r];
-                label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'â€”'}</div></div>`;
+                label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'Ã¢â‚¬â€'}</div></div>`;
                 
                 const ctrls = document.createElement('div');
                 ctrls.className='seq-row-controls';
