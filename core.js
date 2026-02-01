@@ -30,7 +30,29 @@ export function attachCore(engine) {
 
   // Effects
   if (!engine.effects) engine.effects = {};
-  if (!engine.effects.reverb) engine.effects.reverb = engine.context.createConvolver();
+  if (!engine.effects.reverb) {
+    engine.effects.reverb = engine.context.createConvolver();
+    // Create and set impulse response buffer for the reverb
+    try {
+      const reverbDuration = 2;
+      const reverbDecay = 2;
+      const sampleRate = engine.context.sampleRate;
+      const length = sampleRate * reverbDuration;
+      const impulse = engine.context.createBuffer(2, length, sampleRate);
+      
+      for (let channel = 0; channel < 2; channel++) {
+        const channelData = impulse.getChannelData(channel);
+        for (let i = 0; i < length; i++) {
+          channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, reverbDecay);
+        }
+      }
+      
+      engine.effects.reverb.buffer = impulse;
+      console.log('Reverb impulse response created successfully');
+    } catch (e) {
+      console.warn('Failed to create reverb impulse response:', e);
+    }
+  }
   if (!engine.effects.delay) engine.effects.delay = engine.context.createDelay(4.0);
   if (!engine.effects.filter) engine.effects.filter = engine.context.createBiquadFilter();
   if (!engine.effects.compressor) engine.effects.compressor = engine.context.createDynamicsCompressor();
@@ -70,7 +92,7 @@ export async function ensureAudioContextRunning(engine) {
     console.log('Resuming suspended audio context...');
     try {
       await engine.context.resume();
-      console.log('✅ Audio context resumed successfully, state:', engine.context.state);
+      console.log('âœ… Audio context resumed successfully, state:', engine.context.state);
       // Update audio status indicator
       updateAudioStatusIndicator(engine);
       return true;
@@ -92,12 +114,12 @@ function updateAudioStatusIndicator(engine) {
   
   if (engine.context.state === 'running') {
     indicator.classList.add('active');
-    indicator.textContent = '🔊 Audio Active';
+    indicator.textContent = 'ðŸ”Š Audio Active';
   } else if (engine.context.state === 'suspended') {
     indicator.classList.remove('active');
-    indicator.textContent = '🔇 Audio Suspended';
+    indicator.textContent = 'ðŸ”‡ Audio Suspended';
   } else {
     indicator.classList.remove('active');
-    indicator.textContent = '⚠️ Audio Offline';
+    indicator.textContent = 'âš ï¸ Audio Offline';
   }
 }
