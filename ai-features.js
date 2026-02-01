@@ -7,11 +7,15 @@ const AI_CONFIG = {
   replicateApiKey: null,
   replicateBaseUrl: 'https://api.replicate.com/v1',
   
-  // Model IDs on Replicate
+  // Model IDs on Replicate - using latest versions
   models: {
-    musicgen: 'meta/musicgen:b05b1dff1d8c6dc63d14b0cdb42135571e41f5ef1b74acd85a4c6f966296de77',
+    // Meta's MusicGen for audio generation
+    musicgen: 'meta/musicgen:671ac645ce5e552cc63a54a2bbff63fcf798043055d2dac5fc9e36a837eedcfb',
+    // Facebook Demucs for stem separation  
     demucs: 'cjwbw/demucs:25a173108cff36ef9f80f854c162d01df9e6528be175794b81f7ea5f90e7decd',
-    riffusion: 'riffusion/riffusion:8cf61ea6c56afd61d8f5b9ffd14d7c216c0a93844ce2d82ac1c9ecc9c7f24e05'
+    // Alternative: Use model name without version for latest
+    musicgenSimple: 'meta/musicgen',
+    demucsSimple: 'cjwbw/demucs'
   },
   
   // Local beat detection settings
@@ -454,47 +458,79 @@ export async function generateSample(prompt, options = {}) {
   
   const modelId = AI_CONFIG.models[model] || AI_CONFIG.models.musicgen;
   
-  // Start prediction
-  const response = await fetch(`${AI_CONFIG.replicateBaseUrl}/predictions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Token ${AI_CONFIG.replicateApiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      version: modelId.split(':')[1],
-      input: {
-        prompt: prompt,
-        duration: Math.min(duration, 30), // Max 30 seconds
-        temperature,
-        top_k: topK,
-        top_p: topP,
-        classifier_free_guidance,
-        output_format: 'wav'
+  try {
+    // Try using model name without specific version first (gets latest)
+    let requestBody;
+    if (modelId.includes(':')) {
+      // Has specific version
+      requestBody = {
+        version: modelId.split(':')[1],
+        input: {
+          prompt: prompt,
+          duration: Math.min(duration, 30), // Max 30 seconds
+          temperature,
+          top_k: topK,
+          top_p: topP,
+          classifier_free_guidance,
+          output_format: 'wav'
+        }
+      };
+    } else {
+      // Use model name directly (latest version)
+      requestBody = {
+        model: modelId,
+        input: {
+          prompt: prompt,
+          duration: Math.min(duration, 30), // Max 30 seconds
+          temperature,
+          top_k: topK,
+          top_p: topP,
+          classifier_free_guidance,
+          output_format: 'wav'
+        }
+      };
+    }
+    // Start prediction
+    const response = await fetch(`${AI_CONFIG.replicateBaseUrl}/predictions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${AI_CONFIG.replicateApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      if (error.detail && error.detail.includes('version does not exist')) {
+        throw new Error('Model version outdated. The AI model version in the app needs updating. Try again or contact support.');
       }
-    })
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to start generation');
+      throw new Error(error.detail || 'Failed to start generation');
+    }
+    
+    const prediction = await response.json();
+    
+    // Poll for completion
+    const result = await pollPrediction(prediction.id);
+    
+    if (result.status === 'failed') {
+      throw new Error(result.error || 'Generation failed');
+    }
+    
+    // Download the audio
+    const audioUrl = result.output;
+    const audioResponse = await fetch(audioUrl);
+    const audioBuffer = await audioResponse.arrayBuffer();
+    
+    return audioBuffer;
+    
+  } catch (error) {
+    // Handle CORS and network errors with helpful messages
+    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+      throw new Error('CORS Error: Direct API calls from browser are blocked. Please use a local server or proxy. See README for setup instructions.');
+    }
+    throw error;
   }
-  
-  const prediction = await response.json();
-  
-  // Poll for completion
-  const result = await pollPrediction(prediction.id);
-  
-  if (result.status === 'failed') {
-    throw new Error(result.error || 'Generation failed');
-  }
-  
-  // Download the audio
-  const audioUrl = result.output;
-  const audioResponse = await fetch(audioUrl);
-  const audioBuffer = await audioResponse.arrayBuffer();
-  
-  return audioBuffer;
 }
 
 /**
@@ -563,59 +599,92 @@ export async function separateStems(audioData, options = {}) {
   const base64Audio = arrayBufferToBase64(audioData);
   const dataUrl = `data:audio/wav;base64,${base64Audio}`;
   
-  // Start prediction
-  const response = await fetch(`${AI_CONFIG.replicateBaseUrl}/predictions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Token ${AI_CONFIG.replicateApiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      version: AI_CONFIG.models.demucs.split(':')[1],
-      input: {
-        audio: dataUrl,
-        model: model,
-        stems: stems,
-        clip_mode: 'rescale',
-        mp3_bitrate: 320
+  try {
+    // Prepare request body with flexible model version handling
+    const demucsModel = AI_CONFIG.models.demucs;
+    let requestBody;
+    
+    if (demucsModel.includes(':')) {
+      // Has specific version
+      requestBody = {
+        version: demucsModel.split(':')[1],
+        input: {
+          audio: dataUrl,
+          model: model,
+          stems: stems,
+          clip_mode: 'rescale',
+          mp3_bitrate: 320
+        }
+      };
+    } else {
+      // Use model name directly (latest version)
+      requestBody = {
+        model: demucsModel,
+        input: {
+          audio: dataUrl,
+          model: model,
+          stems: stems,
+          clip_mode: 'rescale',
+          mp3_bitrate: 320
+        }
+      };
+    }
+    
+    // Start prediction
+    const response = await fetch(`${AI_CONFIG.replicateBaseUrl}/predictions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${AI_CONFIG.replicateApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      if (error.detail && error.detail.includes('version does not exist')) {
+        throw new Error('Model version outdated. The AI model version in the app needs updating. Try again or contact support.');
       }
-    })
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to start separation');
-  }
-  
-  const prediction = await response.json();
-  
-  // Poll for completion
-  const result = await pollPrediction(prediction.id);
-  
-  if (result.status === 'failed') {
-    throw new Error(result.error || 'Separation failed');
-  }
-  
-  // Download all stems
-  const stems_result = {};
-  
-  if (result.output) {
-    // Result may be an object with stem URLs or an array
-    if (typeof result.output === 'object' && !Array.isArray(result.output)) {
-      for (const [stemName, url] of Object.entries(result.output)) {
-        const stemResponse = await fetch(url);
-        stems_result[stemName] = await stemResponse.arrayBuffer();
-      }
-    } else if (Array.isArray(result.output)) {
-      const stemNames = ['drums', 'bass', 'other', 'vocals'];
-      for (let i = 0; i < result.output.length; i++) {
-        const stemResponse = await fetch(result.output[i]);
-        stems_result[stemNames[i] || `stem_${i}`] = await stemResponse.arrayBuffer();
+      throw new Error(error.detail || 'Failed to start separation');
+    }
+    
+    const prediction = await response.json();
+    
+    // Poll for completion
+    const result = await pollPrediction(prediction.id);
+    
+    if (result.status === 'failed') {
+      throw new Error(result.error || 'Separation failed');
+    }
+    
+    // Download all stems
+    const stems_result = {};
+    
+    if (result.output) {
+      // Result may be an object with stem URLs or an array
+      if (typeof result.output === 'object' && !Array.isArray(result.output)) {
+        for (const [stemName, url] of Object.entries(result.output)) {
+          const stemResponse = await fetch(url);
+          stems_result[stemName] = await stemResponse.arrayBuffer();
+        }
+      } else if (Array.isArray(result.output)) {
+        const stemNames = ['drums', 'bass', 'other', 'vocals'];
+        for (let i = 0; i < result.output.length; i++) {
+          const stemResponse = await fetch(result.output[i]);
+          stems_result[stemNames[i] || `stem_${i}`] = await stemResponse.arrayBuffer();
+        }
       }
     }
+    
+    return stems_result;
+    
+  } catch (error) {
+    // Handle CORS and network errors with helpful messages
+    if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+      throw new Error('CORS Error: Direct API calls from browser are blocked. Please use a local server or proxy. See README for setup instructions.');
+    }
+    throw error;
   }
-  
-  return stems_result;
 }
 
 /**
@@ -730,6 +799,9 @@ function getAIPanelHTML() {
       <div style="background:#0a0a0a;padding:15px;border-radius:8px;margin-bottom:15px;">
         <h4 style="color:#00ccff;margin:0 0 10px 0;">🔑 API Configuration</h4>
         <p style="font-size:12px;opacity:0.7;margin-bottom:10px;">Get your API key from <a href="https://replicate.com" target="_blank" style="color:#00ff88;">replicate.com</a></p>
+        <div style="background:#2a1f1f;border:1px solid #ff6666;border-radius:4px;padding:10px;margin-bottom:10px;font-size:12px;">
+          <strong style="color:#ff6666;">⚠️ Browser Limitation:</strong> Direct API calls may fail due to CORS. For full functionality, run this app on a local server (e.g., <code>python -m http.server</code>) or use a CORS proxy.
+        </div>
         <label for="ai-api-key" class="sr-only">Replicate API Key</label>
         <input type="password" id="ai-api-key" placeholder="Enter Replicate API key" value="${hasKey ? '••••••••••••' : ''}" style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #444;color:#fff;border-radius:4px;" aria-label="Replicate API Key">
         <button id="ai-save-key" style="margin-top:10px;padding:8px 15px;background:linear-gradient(135deg,#00ff88,#00ccff);border:none;color:#000;border-radius:4px;cursor:pointer;font-weight:bold;">Save Key</button>
