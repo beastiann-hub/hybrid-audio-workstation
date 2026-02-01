@@ -639,7 +639,41 @@ if (toMPCBtn) {
     const container = document.getElementById('chop-pads'); if (!container) return; container.innerHTML=''; for (let i=0;i<Math.min(16,this.chopper.numSlices);i++){ const pad=document.createElement('div'); pad.className='chop-pad'; pad.textContent = i+1; pad.onclick = ()=> this.playSlice(i); container.appendChild(pad); } }
 
   function playSlice(index) {
-    if (!this.chopper.buffer || !this.chopper.slices[index]) return; const slice = this.chopper.slices[index]; const source = this.context.createBufferSource(); source.buffer = this.chopper.buffer; const gain = this.context.createGain(); gain.gain.value = 0.8; source.connect(gain); gain.connect(this.masterGain); source.loop = false; this.chopper.playingSources.add(source); source.onended = () => this.chopper.playingSources.delete(source); source.start(0, slice.start, slice.end - slice.start); const pads = document.querySelectorAll('.chop-pad'); if (pads[index]) { pads[index].classList.add('active'); setTimeout(()=>pads[index].classList.remove('active'),200); }
+    if (!this.chopper.buffer || !this.chopper.slices[index]) return;
+    
+    // Check if audio context is suspended and try to resume
+    if (this.context.state === 'suspended') {
+      console.log('Audio context suspended, attempting to resume...');
+      this.context.resume().then(() => {
+        console.log('✅ Audio context resumed, playing slice');
+        this._playSliceAfterResume(index);
+      }).catch(e => {
+        console.error('Failed to resume audio context:', e);
+        this.updateStatus('Audio context suspended - click to activate');
+      });
+      return;
+    }
+    
+    this._playSliceAfterResume(index);
+  }
+
+  function _playSliceAfterResume(index) {
+    const slice = this.chopper.slices[index]; 
+    const source = this.context.createBufferSource(); 
+    source.buffer = this.chopper.buffer; 
+    const gain = this.context.createGain(); 
+    gain.gain.value = 0.8; 
+    source.connect(gain); 
+    gain.connect(this.masterGain); 
+    source.loop = false; 
+    this.chopper.playingSources.add(source); 
+    source.onended = () => this.chopper.playingSources.delete(source); 
+    source.start(0, slice.start, slice.end - slice.start); 
+    const pads = document.querySelectorAll('.chop-pad'); 
+    if (pads[index]) { 
+      pads[index].classList.add('active'); 
+      setTimeout(()=>pads[index].classList.remove('active'),200); 
+    }
   }
 
   function slicesToSequencerRows() {
@@ -691,7 +725,7 @@ if (toMPCBtn) {
     drawChopperWaveformMain, setupManualChopModeMain, renderChopperPadsMain,
     updateChopperInfo, updateSliceCountDisplay, playFullSample, selectSliceForEffects,
     playSliceWithEffects, resetSliceEffects, applySliceEffectPreset, exportSliceWithEffects,
-    createEqualSlices, detectTransients, renderChopperPads, playSlice, slicesToSequencerRows,
+    createEqualSlices, detectTransients, renderChopperPads, playSlice, _playSliceAfterResume, slicesToSequencerRows,
     slicesToLoopTracks, exportAllSlices, setupChopperInteraction
   };
 

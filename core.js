@@ -8,25 +8,6 @@ export function attachCore(engine) {
       console.error('Failed to create audio context:', e);
       throw new Error('Audio context creation failed. Your browser may not support Web Audio API.');
     }
-    
-    // iOS/iPad-specific audio context handling
-    if (engine.context.state === 'suspended') {
-      console.log('Audio context suspended - setting up resume handlers for iOS/iPad');
-      const resumeAudio = async () => {
-        try {
-          await engine.context.resume();
-          console.log('✅ Audio context resumed for iOS/iPad, state:', engine.context.state);
-          document.removeEventListener('touchstart', resumeAudio);
-          document.removeEventListener('click', resumeAudio);
-          document.removeEventListener('keydown', resumeAudio);
-        } catch (e) {
-          console.error('Failed to resume audio context:', e);
-        }
-      };
-      document.addEventListener('touchstart', resumeAudio, { once: true });
-      document.addEventListener('click', resumeAudio, { once: true });
-      document.addEventListener('keydown', resumeAudio, { once: true });
-    }
   }
   // Backwards-compatible aliases for console / older code
   if (!engine.audioContext) engine.audioContext = engine.context;
@@ -78,5 +59,45 @@ export function attachCore(engine) {
     }
   } catch (e) {
     console.warn('Failed to create draw worker', e);
+  }
+}
+
+// Function to ensure audio context is running - call after user interaction
+export async function ensureAudioContextRunning(engine) {
+  if (!engine.context) return false;
+  
+  if (engine.context.state === 'suspended') {
+    console.log('Resuming suspended audio context...');
+    try {
+      await engine.context.resume();
+      console.log('✅ Audio context resumed successfully, state:', engine.context.state);
+      // Update audio status indicator
+      updateAudioStatusIndicator(engine);
+      return true;
+    } catch (e) {
+      console.error('Failed to resume audio context:', e);
+      return false;
+    }
+  }
+  
+  console.log('Audio context already running, state:', engine.context.state);
+  updateAudioStatusIndicator(engine);
+  return true;
+}
+
+// Update the visual audio status indicator
+function updateAudioStatusIndicator(engine) {
+  const indicator = document.getElementById('audio-status');
+  if (!indicator || !engine.context) return;
+  
+  if (engine.context.state === 'running') {
+    indicator.classList.add('active');
+    indicator.textContent = '🔊 Audio Active';
+  } else if (engine.context.state === 'suspended') {
+    indicator.classList.remove('active');
+    indicator.textContent = '🔇 Audio Suspended';
+  } else {
+    indicator.classList.remove('active');
+    indicator.textContent = '⚠️ Audio Offline';
   }
 }

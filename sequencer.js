@@ -35,6 +35,24 @@ function getNextStepTime(fromTime = this.context.currentTime) {
 
 function playAll() {
   if (this.isPlaying) return;
+  
+  // Check if audio context is suspended and try to resume
+  if (this.context.state === 'suspended') {
+    console.log('Audio context suspended, attempting to resume...');
+    this.context.resume().then(() => {
+      console.log('✅ Audio context resumed, continuing playback');
+      this._playAllAfterResume();
+    }).catch(e => {
+      console.error('Failed to resume audio context:', e);
+      this.updateStatus('Audio context suspended - click to activate');
+    });
+    return;
+  }
+  
+  this._playAllAfterResume();
+}
+
+function _playAllAfterResume() {
   const now = this.context.currentTime;
   const start = this.getNextDownbeat(now) + (this.countInBars * this.getBarDuration());
   this.transportStartTime = start;
@@ -296,7 +314,7 @@ function tapTempo() {
 export function installSequencerImpls(engine) {
   const impls = {
     getBeatDuration, getBarDuration, getStepDuration, getNextDownbeat, getNextStepTime,
-    playAll, stopAll, startMetronome, stopMetronome, _scheduleClick,
+    playAll, _playAllAfterResume, stopAll, startMetronome, stopMetronome, _scheduleClick,
     startScheduler, _schedulerTick, renderSequencer, tapTempo
   };
   Object.keys(impls).forEach(k => engine[k] = impls[k].bind(engine));

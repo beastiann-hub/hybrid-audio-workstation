@@ -3,6 +3,7 @@
 
 // Core engine import (required)
 import { UnifiedAudioEngine } from './engine.js';
+import { ensureAudioContextRunning } from './core.js';
 
 // Optional module placeholders
 let initMIDI, showMIDIMappingUI, exportMIDIMappings, importMIDIMappings;
@@ -773,6 +774,12 @@ window.addEventListener('DOMContentLoaded', () => {
       
       await engine.init();
       
+      // Ensure audio context is running after user interaction
+      const audioResumed = await ensureAudioContextRunning(engine);
+      if (!audioResumed) {
+        console.warn('Audio context could not be resumed');
+      }
+      
       // Initialize UI components
       initializeSampleBank();
       saveCurrentPattern();
@@ -783,6 +790,19 @@ window.addEventListener('DOMContentLoaded', () => {
       // Bind all UI events
       bindUI();
       setupModeSwitcher();
+      
+      // Add global handler for audio context resume on any user interaction
+      document.addEventListener('click', async () => {
+        if (engine && engine.context && engine.context.state === 'suspended') {
+          await ensureAudioContextRunning(engine);
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchstart', async () => {
+        if (engine && engine.context && engine.context.state === 'suspended') {
+          await ensureAudioContextRunning(engine);
+        }
+      }, { passive: true });
       
       // Load saved settings if available
       if (loadSetting && applyPresetToMaster) {
@@ -797,9 +817,14 @@ window.addEventListener('DOMContentLoaded', () => {
       // Hide loading overlay
       overlay.style.display = 'none';
       
-      // Update status
-      engine.updateStatus('Ready');
-      document.getElementById('audio-status')?.classList.add('active');
+      // Update status and audio indicator based on actual audio context state
+      if (engine.context && engine.context.state === 'running') {
+        engine.updateStatus('Ready - Audio Active');
+      } else if (engine.context && engine.context.state === 'suspended') {
+        engine.updateStatus('Ready - Click anywhere to activate audio');
+      } else {
+        engine.updateStatus('Ready - Audio initialization may be needed');
+      }
       
     } catch (e) {
       console.error('Init failed:', e);
@@ -846,3 +871,9 @@ window.loadPattern = loadPattern;
 window.clearPattern = clearPattern;
 window.setActivePattern = setActivePattern;
 window.renderSequencerControls = renderSequencerControls;
+
+// Helper function to ensure audio is ready before critical operations
+window.ensureAudioReady = async function() {
+  if (!engine) return false;
+  return await ensureAudioContextRunning(engine);
+};

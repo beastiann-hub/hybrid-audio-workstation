@@ -529,6 +529,25 @@ export function installTracksImpls(engine) {
       return;
     }
     
+    // Check if audio context is suspended and try to resume
+    if (this.context.state === 'suspended') {
+      console.log('Audio context suspended, attempting to resume...');
+      this.context.resume().then(() => {
+        console.log('✅ Audio context resumed, starting track playback');
+        this._playTrackAfterResume(trackIndex);
+      }).catch(e => {
+        console.error('Failed to resume audio context:', e);
+        this.updateStatus('Audio context suspended - click to activate');
+      });
+      return;
+    }
+    
+    this._playTrackAfterResume(trackIndex);
+  }
+
+  function _playTrackAfterResume(trackIndex) {
+    let track = this.tracks[trackIndex];
+    
     if (track.isPlaying) {
       this.stopTrack(trackIndex);
     }
@@ -1183,7 +1202,7 @@ export function installTracksImpls(engine) {
 
   const impls = {
     renderTracks, createTrackCard, importTrackFromFileDialog, startRecording, doCountIn,
-    _updateRecordingPlayhead, stopRecording, mixBuffers, mixBuffersAligned, playTrack, _updatePlayhead,
+    _updateRecordingPlayhead, stopRecording, mixBuffers, mixBuffersAligned, playTrack, _playTrackAfterResume, _updatePlayhead,
     stopTrack, clearTrack, drawWaveform, setupWaveformTrimInteraction, showTrimControls, hideTrimControls,
     showTrimAppliedFeedback, toggleMute, toggleSolo, splitTrackAtTime, duplicateTrack, reverseTrack,
     normalizeTrack, fadeInTrack, fadeOutTrack, undoLastEdit, saveToUndoStack
