@@ -813,8 +813,27 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   };
   
-  // Start on click (required for AudioContext)
-  overlay.addEventListener('click', start, { once: true });
+  // Start on click/touch (required for AudioContext)
+  const startApp = () => {
+    console.log('Starting app with user interaction...');
+    start();
+  };
+  
+  // Support both click and touch events for better iPad compatibility
+  overlay.addEventListener('click', startApp, { once: true });
+  overlay.addEventListener('touchstart', startApp, { once: true });
+  
+  // Also add keyboard support for accessibility
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      startApp();
+    }
+  }, { once: true });
+  
+  // Make overlay focusable for keyboard navigation
+  overlay.setAttribute('tabindex', '0');
+  overlay.setAttribute('aria-label', 'Click or tap to start the audio workstation');
 });
 
 // ==================== Expose Global Functions ====================

@@ -1,19 +1,31 @@
 export function attachCore(engine) {
   // Initialize AudioContext and core routing if not already present
   if (!engine.context) {
-    engine.context = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      engine.context = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('Audio context created, state:', engine.context.state);
+    } catch (e) {
+      console.error('Failed to create audio context:', e);
+      throw new Error('Audio context creation failed. Your browser may not support Web Audio API.');
+    }
     
     // iOS/iPad-specific audio context handling
     if (engine.context.state === 'suspended') {
-      const resumeAudio = () => {
-        engine.context.resume().then(() => {
-          console.log('Audio context resumed for iOS/iPad');
+      console.log('Audio context suspended - setting up resume handlers for iOS/iPad');
+      const resumeAudio = async () => {
+        try {
+          await engine.context.resume();
+          console.log('✅ Audio context resumed for iOS/iPad, state:', engine.context.state);
           document.removeEventListener('touchstart', resumeAudio);
           document.removeEventListener('click', resumeAudio);
-        });
+          document.removeEventListener('keydown', resumeAudio);
+        } catch (e) {
+          console.error('Failed to resume audio context:', e);
+        }
       };
       document.addEventListener('touchstart', resumeAudio, { once: true });
       document.addEventListener('click', resumeAudio, { once: true });
+      document.addEventListener('keydown', resumeAudio, { once: true });
     }
   }
   // Backwards-compatible aliases for console / older code
