@@ -77,6 +77,8 @@ export async function detectBeats(buffer, options = {}) {
   
   // Step 1: Compute onset detection function
   // Use setTimeout to yield control back to browser to prevent UI freeze
+  // Note: Web Workers would be ideal but AudioBuffer cannot be transferred,
+  // and this minimal approach effectively prevents browser lockup for typical audio lengths
   const onsets = await new Promise(resolve => {
     setTimeout(() => {
       resolve(computeOnsetDetectionFunction(data, sampleRate, sensitivity));
@@ -420,7 +422,7 @@ export function snapToBeat(time, beatInfo) {
  * @param {AudioBuffer} buffer - Audio buffer
  * @param {number} numSlices - Number of slices
  * @param {object} options - Options
- * @returns {Promise<object>} Slice boundaries aligned to beats
+ * @returns {Promise<object>} Object containing slice boundaries and beat info
  */
 export async function getBeatAlignedSlices(buffer, numSlices, options = {}) {
   const beatInfo = await detectBeats(buffer, options);
