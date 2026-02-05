@@ -63,9 +63,9 @@ export function hasApiKey() {
  * Advanced beat detection using multiple algorithms
  * @param {AudioBuffer} buffer - Audio buffer to analyze
  * @param {object} options - Detection options
- * @returns {object} Beat analysis results
+ * @returns {Promise<object>} Beat analysis results
  */
-export function detectBeats(buffer, options = {}) {
+export async function detectBeats(buffer, options = {}) {
   const {
     sensitivity = 0.5,
     minBPM = AI_CONFIG.beatDetection.minBPM,
@@ -76,19 +76,42 @@ export function detectBeats(buffer, options = {}) {
   const data = buffer.getChannelData(0);
   
   // Step 1: Compute onset detection function
-  const onsets = computeOnsetDetectionFunction(data, sampleRate, sensitivity);
+  // Use setTimeout to yield control back to browser to prevent UI freeze
+  // Note: Web Workers would be ideal but AudioBuffer cannot be transferred,
+  // and this minimal approach effectively prevents browser lockup for typical audio lengths
+  const onsets = await new Promise(resolve => {
+    setTimeout(() => {
+      resolve(computeOnsetDetectionFunction(data, sampleRate, sensitivity));
+    }, 0);
+  });
   
   // Step 2: Find peaks in onset function
-  const peaks = findOnsetPeaks(onsets, sampleRate, sensitivity);
+  const peaks = await new Promise(resolve => {
+    setTimeout(() => {
+      resolve(findOnsetPeaks(onsets, sampleRate, sensitivity));
+    }, 0);
+  });
   
   // Step 3: Estimate BPM using autocorrelation
-  const bpmResult = estimateBPM(onsets, sampleRate, minBPM, maxBPM);
+  const bpmResult = await new Promise(resolve => {
+    setTimeout(() => {
+      resolve(estimateBPM(onsets, sampleRate, minBPM, maxBPM));
+    }, 0);
+  });
   
   // Step 4: Quantize beats to grid
-  const beatGrid = createBeatGrid(peaks, bpmResult.bpm, buffer.duration, sampleRate);
+  const beatGrid = await new Promise(resolve => {
+    setTimeout(() => {
+      resolve(createBeatGrid(peaks, bpmResult.bpm, buffer.duration, sampleRate));
+    }, 0);
+  });
   
   // Step 5: Detect downbeats (measure starts)
-  const downbeats = detectDownbeats(data, beatGrid, sampleRate);
+  const downbeats = await new Promise(resolve => {
+    setTimeout(() => {
+      resolve(detectDownbeats(data, beatGrid, sampleRate));
+    }, 0);
+  });
   
   return {
     bpm: bpmResult.bpm,
@@ -399,10 +422,10 @@ export function snapToBeat(time, beatInfo) {
  * @param {AudioBuffer} buffer - Audio buffer
  * @param {number} numSlices - Number of slices
  * @param {object} options - Options
- * @returns {array} Slice boundaries aligned to beats
+ * @returns {Promise<object>} Object containing slice boundaries and beat info
  */
-export function getBeatAlignedSlices(buffer, numSlices, options = {}) {
-  const beatInfo = detectBeats(buffer, options);
+export async function getBeatAlignedSlices(buffer, numSlices, options = {}) {
+  const beatInfo = await detectBeats(buffer, options);
   const { beats, bpm, barDuration } = beatInfo;
   
   const slices = [];
@@ -871,18 +894,36 @@ function bindAIPanelEvents() {
       return;
     }
     
-    const results = detectBeats(engine.chopper.buffer);
+    const detectButton = document.getElementById('ai-detect-beats');
+    const originalText = detectButton.textContent;
     
-    document.getElementById('detected-bpm').textContent = results.bpm;
-    document.getElementById('bpm-confidence').textContent = (results.confidence * 100).toFixed(0) + '%';
-    document.getElementById('total-beats').textContent = results.totalBeats;
-    document.getElementById('total-bars').textContent = results.totalBars;
-    document.getElementById('beat-detection-results').style.display = 'block';
-    
-    // Store results for later use
-    window._beatDetectionResults = results;
-    
-    engine.updateStatus(`Detected ${results.bpm} BPM (${(results.confidence * 100).toFixed(0)}% confidence)`);
+    try {
+      // Disable button and show processing state
+      detectButton.disabled = true;
+      detectButton.textContent = '⏳ Analyzing...';
+      engine.updateStatus('Analyzing beats...');
+      
+      const results = await detectBeats(engine.chopper.buffer);
+      
+      document.getElementById('detected-bpm').textContent = results.bpm;
+      document.getElementById('bpm-confidence').textContent = (results.confidence * 100).toFixed(0) + '%';
+      document.getElementById('total-beats').textContent = results.totalBeats;
+      document.getElementById('total-bars').textContent = results.totalBars;
+      document.getElementById('beat-detection-results').style.display = 'block';
+      
+      // Store results for later use
+      window._beatDetectionResults = results;
+      
+      engine.updateStatus(`Detected ${results.bpm} BPM (${(results.confidence * 100).toFixed(0)}% confidence)`);
+    } catch (error) {
+      console.error('Beat detection error:', error);
+      engine.updateStatus('Beat detection failed: ' + error.message);
+      alert('Beat detection failed. Check console for details.');
+    } finally {
+      // Re-enable button and restore original text
+      detectButton.disabled = false;
+      detectButton.textContent = originalText;
+    }
   });
   
   // Apply BPM
