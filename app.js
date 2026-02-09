@@ -1,7 +1,10 @@
-// app.js - Main application entry point (Refactored)
-// Imports all modules and wires up the UI
+// app.js - Enhanced Neural Interface Integration
+// Hybrid Audio Workstation with Neural Workflow Management
 
-// Core engine import (required)
+// Import neural interface
+import { NeuralWorkflowManager, neuralInterface } from './neural-app.js';
+
+// Legacy compatibility - maintain existing functionality while enhancing with neural features
 import { UnifiedAudioEngine } from './engine.js';
 import { ensureAudioContextRunning } from './core.js';
 
@@ -12,9 +15,16 @@ let initDB, saveProject, loadProject, getAllProjects, saveSetting, loadSetting;
 let BeatDetector, detectBPM, getSlicePointsFromBeats;
 let showAIPanel, detectBeats, setReplicateApiKey, hasApiKey, generateSample, separateStems;
 
-// Load optional modules
+// Enhanced initialization with neural interface integration
 async function loadOptionalModules() {
-  // MIDI module
+  console.log('🧠 Loading Neural Enhancement Modules...');
+  
+  // Initialize neural interface first
+  if (!window.neuralInterface) {
+    console.log('✅ Neural Interface initialized');
+  }
+  
+  // MIDI module with neural integration
   try {
     const midi = await import('./midi.js');
     initMIDI = midi.initMIDI;

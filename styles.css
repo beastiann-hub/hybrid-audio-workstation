@@ -10,12 +10,20 @@
 }
 
 :root {
-    /* Color palette */
+    /* Original Color palette */
     --color-primary: #00ff88;
     --color-secondary: #00ccff;
     --color-accent: #ff00ff;
     --color-warning: #ff8800;
     --color-danger: #ff4444;
+    
+    /* Neural Interface Enhancements */
+    --neon-cyan: #00ffff;
+    --neon-magenta: #ff00ff;
+    --neon-yellow: #ffff00;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --neural-grid: rgba(0, 255, 255, 0.1);
     
     /* Backgrounds */
     --bg-dark: #0a0a0a;
