@@ -957,32 +957,60 @@
             }
             
             setupChopperIntegration() {
-                // Connect load sample button to existing chopper
+                // Connect load sample button to file input
                 document.getElementById('load-sample')?.addEventListener('click', () => {
-                    if (this.engine?.loadChopperFile) {
-                        this.engine.loadChopperFile();
-                        this.showMessage('Loading sample for chopping...', 'info');
+                    const input = document.getElementById('chop-file-input');
+                    if (input) {
+                        input.click();
+                        this.showMessage('Select audio file for chopping...', 'info');
                     }
                 });
                 
+                // Handle file selection for chopper
+                const chopInput = document.getElementById('chop-file-input');
+                if (chopInput) {
+                    chopInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            await this.loadFileToChopper(file);
+                        }
+                    };
+                }
+                
                 // Auto slice button
                 document.getElementById('auto-slice')?.addEventListener('click', () => {
-                    if (this.engine?.createEqualSlices) {
+                    if (this.engine?.createEqualSlices && this.engine?.chopper?.buffer) {
                         this.engine.createEqualSlices();
                         this.showMessage('Created equal slices', 'success');
+                        this.updatePadLabels();
+                    } else if (this.engine?.chopper?.buffer) {
+                        // Fallback: create basic equal slices
+                        this.createBasicSlices();
+                        this.showMessage('Created 8 equal slices', 'success');
+                    } else {
+                        this.showError('No audio loaded in chopper. Load a file first.');
                     }
                 });
                 
                 // Manual slice mode
                 document.getElementById('manual-slice')?.addEventListener('click', () => {
-                    if (this.engine?.toggleManualMode) {
+                    if (this.engine?.toggleManualMode && this.engine?.chopper?.buffer) {
                         this.engine.toggleManualMode();
                         this.showMessage('Manual slicing mode toggled', 'info');
+                    } else if (this.engine?.chopper?.buffer) {
+                        this.showMessage('Manual slicing not implemented yet', 'info');
+                    } else {
+                        this.showError('No audio loaded in chopper. Load a file first.');
                     }
                 });
                 
                 // AI slice (beat detection)
                 document.getElementById('ai-slice')?.addEventListener('click', async () => {
+                    if (!this.engine?.chopper?.buffer) {
+                        this.showError('No audio loaded in chopper. Load a file first.');
+                        return;
+                    }
+                    
                     if (this.engine?.chopper?.buffer && detectBeats) {
                         try {
                             this.showMessage('AI analyzing beats...', 'info');
@@ -1003,6 +1031,10 @@
                         // Fallback to built-in transient detection
                         this.engine.detectTransients();
                         this.showMessage('Analyzing audio for slice points...', 'info');
+                    } else {
+                        // Basic fallback - create slices based on audio peaks
+                        this.createBasicSlices();
+                        this.showMessage('AI features not available. Created basic slices.', 'info');
                     }
                 });
             }
@@ -1861,14 +1893,24 @@
                     switch (this.padMode) {
                         case 'slices':
                             // Use existing chopper slice playback
-                            if (this.engine.playSlice) {
+                            if (this.engine.playSlice && this.engine.chopper?.slices?.[index]) {
                                 this.engine.playSlice(index);
+                            } else if (this.engine.chopper?.slices?.[index]) {
+                                // Fallback slice playback
+                                this.playSliceFallback(index);
+                            } else {
+                                this.showMessage(`Slice ${index + 1} not available`, 'error');
                             }
                             break;
                         case 'samples':
                             // Use existing sample bank playback
-                            if (this.engine.playSample) {
+                            if (this.engine.playSample && this.engine.sampleBank?.has(index)) {
                                 this.engine.playSample(index);
+                            } else if (this.engine.sampleBank?.has(index)) {
+                                // Fallback sample playback
+                                this.playSampleFallback(index);
+                            } else {
+                                this.showMessage(`Sample ${index + 1} not loaded`, 'error');
                             }
                             break;
                         case 'loops':
@@ -2172,6 +2214,137 @@
                     }
                 };
                 input.click();
+            }
+            
+            async loadFileToChopper(file) {
+                try {
+                    this.showMessage(`Loading ${file.name}...`, 'info');
+                    console.log('🔪 Loading file to chopper:', file.name);
+                    
+                    // Convert file to audio buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    const audioBuffer = await this.engine.context.decodeAudioData(arrayBuffer);
+                    
+                    // Store in engine's chopper if available
+                    if (this.engine.chopper) {
+                        this.engine.chopper.buffer = audioBuffer;
+                        this.engine.chopper.filename = file.name;
+                        console.log('✅ File loaded to chopper successfully');
+                        this.showMessage(`${file.name} loaded for chopping!`, 'success');
+                        
+                        // Update chopper waveform display if available
+                        if (this.engine.renderChopper) {
+                            this.engine.renderChopper();
+                        }
+                        
+                        // Auto-create basic slices
+                        setTimeout(() => {
+                            if (this.engine.createEqualSlices) {
+                                this.engine.createEqualSlices();
+                                this.updatePadLabels();
+                            }
+                        }, 500);
+                        
+                    } else {
+                        // Fallback: create basic chopper object
+                        if (!this.engine.chopper) {
+                            this.engine.chopper = {};
+                        }
+                        this.engine.chopper.buffer = audioBuffer;
+                        this.engine.chopper.filename = file.name;
+                        this.engine.chopper.slices = [];
+                        
+                        console.log('✅ File loaded (basic chopper mode)');
+                        this.showMessage(`${file.name} loaded! Use slice buttons to chop.`, 'success');
+                    }
+                    
+                } catch (error) {
+                    console.error('Failed to load file to chopper:', error);
+                    this.showError(`Failed to load ${file.name}`);
+                }
+            }
+            
+            createBasicSlices() {
+                if (!this.engine?.chopper?.buffer) return;
+                
+                const buffer = this.engine.chopper.buffer;
+                const duration = buffer.duration;
+                const sliceCount = 8;
+                const sliceLength = duration / sliceCount;
+                
+                // Create slice markers
+                this.engine.chopper.slices = [];
+                for (let i = 0; i < sliceCount; i++) {
+                    const start = i * sliceLength;
+                    const end = (i + 1) * sliceLength;
+                    this.engine.chopper.slices.push({
+                        start: start,
+                        end: end,
+                        index: i
+                    });
+                }
+                
+                console.log(`🔪 Created ${sliceCount} equal slices`);
+                this.updatePadLabels();
+            }
+            
+            playSliceFallback(index) {
+                if (!this.engine?.chopper?.buffer || !this.engine.chopper.slices?.[index]) return;
+                
+                try {
+                    const slice = this.engine.chopper.slices[index];
+                    const buffer = this.engine.chopper.buffer;
+                    
+                    // Create buffer source
+                    const source = this.engine.context.createBufferSource();
+                    source.buffer = buffer;
+                    
+                    // Connect to output
+                    if (this.engine.masterGain) {
+                        source.connect(this.engine.masterGain);
+                    } else {
+                        source.connect(this.engine.context.destination);
+                    }
+                    
+                    // Play slice with start and duration
+                    const startTime = this.engine.context.currentTime;
+                    const duration = slice.end - slice.start;
+                    
+                    source.start(startTime, slice.start, duration);
+                    console.log(`🔪 Playing slice ${index + 1}: ${slice.start.toFixed(2)}s - ${slice.end.toFixed(2)}s`);
+                    
+                } catch (error) {
+                    console.error('Failed to play slice:', error);
+                    this.showError(`Failed to play slice ${index + 1}`);
+                }
+            }
+            
+            playSampleFallback(index) {
+                if (!this.engine?.sampleBank?.has(index)) return;
+                
+                try {
+                    const sample = this.engine.sampleBank.get(index);
+                    if (!sample.buffer) return;
+                    
+                    // Create buffer source
+                    const source = this.engine.context.createBufferSource();
+                    source.buffer = sample.buffer;
+                    
+                    // Connect to output
+                    if (this.engine.masterGain) {
+                        source.connect(this.engine.masterGain);
+                    } else {
+                        source.connect(this.engine.context.destination);
+                    }
+                    
+                    // Play sample
+                    source.start(this.engine.context.currentTime);
+                    console.log(`🎵 Playing sample ${index + 1}: ${sample.name}`);
+                    
+                } catch (error) {
+                    console.error('Failed to play sample:', error);
+                    this.showError(`Failed to play sample ${index + 1}`);
+                }
             }
         }
         
