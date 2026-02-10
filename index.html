@@ -205,14 +205,14 @@
             font-size: 20px;
         }
         
-        /* Button Labels */
+        /* Clear Button Labels */
         .orb-control {
             background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1)) !important;
             border: 2px solid rgba(0, 255, 255, 0.3) !important;
             border-radius: 50% !important;
-            width: 48px !important;
-            height: 48px !important;
-            font-size: 16px !important;
+            width: 56px !important;
+            height: 56px !important;
+            font-size: 18px !important;
             cursor: pointer !important;
             transition: all 0.3s ease !important;
             box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2) !important;
@@ -221,22 +221,18 @@
             align-items: center !important;
             justify-content: center !important;
             position: relative !important;
+            gap: 2px !important;
         }
         
-        .orb-control::after {
-            content: attr(data-label);
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.7);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 2px 6px;
-            border-radius: 10px;
-            white-space: nowrap;
-            font-family: monospace;
-            text-transform: uppercase;
+        .btn-label {
+            font-size: 8px !important;
+            color: rgba(0, 255, 255, 0.9) !important;
+            font-family: 'Courier New', monospace !important;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            text-shadow: 0 0 4px rgba(0, 255, 255, 0.5) !important;
+            margin-top: 1px !important;
         }
 
         .orb-control:hover {
@@ -269,7 +265,12 @@
             width: 100%;
             height: 100%;
             display: block;
-            background: rgba(0, 0, 0, 0.8);
+            background: radial-gradient(ellipse at center, #001122 0%, #000510 100%) !important;
+            border: 2px solid rgba(0, 255, 255, 0.4) !important;
+            border-radius: 12px !important;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 255, 0.1),
+                0 0 30px rgba(0, 255, 255, 0.2) !important;
         }
         
         #chop-waveform {
@@ -2408,26 +2409,100 @@
                 const canvas = document.getElementById('performance-visualizer');
                 if (!canvas) return;
                 
+                // Hi-DPI canvas setup
                 const ctx = canvas.getContext('2d');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
+                const scale = window.devicePixelRatio || 2;
+                const width = canvas.width = canvas.offsetWidth * scale;
+                const height = canvas.height = canvas.offsetHeight * scale;
+                canvas.style.width = canvas.offsetWidth + 'px';
+                canvas.style.height = canvas.offsetHeight + 'px';
+                ctx.scale(scale, scale);
+                
+                const containerWidth = canvas.offsetWidth;
+                const containerHeight = canvas.offsetHeight;
                 
                 const animate = () => {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    // Cyberpunk background with gradient
+                    ctx.clearRect(0, 0, containerWidth, containerHeight);
+                    const gradient = ctx.createLinearGradient(0, 0, 0, containerHeight);
+                    gradient.addColorStop(0, '#000615');
+                    gradient.addColorStop(0.5, '#001133');
+                    gradient.addColorStop(1, '#000615');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, containerWidth, containerHeight);
                     
-                    // Simple waveform visualization
-                    ctx.strokeStyle = '#00ffff';
-                    ctx.lineWidth = 2;
+                    // Create futuristic waveform gradient
+                    const waveGradient = ctx.createLinearGradient(0, 0, containerWidth, 0);
+                    waveGradient.addColorStop(0, '#00ffff');
+                    waveGradient.addColorStop(0.3, '#0088ff');
+                    waveGradient.addColorStop(0.7, '#ff0088');
+                    waveGradient.addColorStop(1, '#ff00ff');
+                    
+                    // Main waveform with glow
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 12;
+                    ctx.strokeStyle = waveGradient;
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
                     
-                    for (let i = 0; i < canvas.width; i += 4) {
-                        const y = canvas.height / 2 + Math.sin((i + Date.now() * 0.01) * 0.02) * 30;
+                    const time = Date.now() * 0.008;
+                    const centerY = containerHeight / 2;
+                    
+                    for (let i = 0; i < containerWidth; i += 2) {
+                        // Complex waveform with multiple frequencies
+                        const baseWave = Math.sin((i * 0.02) + time) * 40;
+                        const harmonic = Math.sin((i * 0.05) + time * 1.5) * 15;
+                        const noise = (Math.random() - 0.5) * 8;
+                        const y = centerY + baseWave + harmonic + noise;
+                        
                         if (i === 0) ctx.moveTo(i, y);
                         else ctx.lineTo(i, y);
                     }
-                    
                     ctx.stroke();
+                    
+                    // Secondary animated wave
+                    ctx.shadowBlur = 8;
+                    ctx.strokeStyle = 'rgba(255, 0, 255, 0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < containerWidth; i += 3) {
+                        const y = centerY + Math.sin((i * 0.03) + time * 2) * 25;
+                        if (i === 0) ctx.moveTo(i, y);
+                        else ctx.lineTo(i, y);
+                    }
+                    ctx.stroke();
+                    
+                    // Frequency spectrum bars
+                    ctx.shadowBlur = 4;
+                    const barWidth = containerWidth / 32;
+                    for (let i = 0; i < 32; i++) {
+                        const x = i * barWidth;
+                        const intensity = Math.abs(Math.sin((i * 0.5) + time)) * 0.8 + 0.2;
+                        const barHeight = intensity * (containerHeight * 0.3);
+                        
+                        // Gradient for each bar
+                        const barGradient = ctx.createLinearGradient(x, containerHeight, x, containerHeight - barHeight);
+                        barGradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+                        barGradient.addColorStop(0.5, 'rgba(0, 136, 255, 0.6)');
+                        barGradient.addColorStop(1, 'rgba(255, 0, 136, 0.4)');
+                        
+                        ctx.fillStyle = barGradient;
+                        ctx.fillRect(x, containerHeight - barHeight, barWidth * 0.8, barHeight);
+                    }
+                    
+                    // Center line
+                    ctx.shadowBlur = 2;
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(0, centerY);
+                    ctx.lineTo(containerWidth, centerY);
+                    ctx.stroke();
+                    
+                    // Reset shadow
+                    ctx.shadowBlur = 0;
+                    
                     requestAnimationFrame(animate);
                 };
                 
@@ -2744,39 +2819,40 @@
     <!-- Service Worker Registration -->
     <!-- Button Labeling Script for Better UX -->
     <script>
-        // Add clear labels to make buttons less cryptic
+        // Fix cryptic buttons with clear labels and proper emoji
         setTimeout(() => {
-            const labels = {
-                'load-sample': 'LOAD',
-                'auto-slice': 'AUTO',
-                'manual-slice': 'MANUAL', 
-                'ai-slice': 'AI',
-                'play-all': 'PLAY',
-                'stop-all': 'STOP',
-                'record-mode': 'REC',
-                'metronome': 'METRO',
-                'save-project': 'SAVE',
-                'load-project': 'LOAD',
-                'record-arm': 'ARM',
-                'overdub-mode': 'OVERDUB',
-                'monitor-toggle': 'MONITOR',
-                'mixdown-tracks': 'MIXDOWN',
-                'master-effects': 'EFFECTS',
-                'import-samples': 'IMPORT',
-                'clear-samples': 'CLEAR',
-                'midi-connect': 'MIDI',
-                'ai-assistant': 'AI'
+            const buttonUpdates = {
+                'play-all': { emoji: '▶️', label: 'PLAY' },
+                'stop-all': { emoji: '⏹️', label: 'STOP' },
+                'record-mode': { emoji: '🔴', label: 'REC' },
+                'metronome': { emoji: '🥁', label: 'METRO' },
+                'save-project': { emoji: '💾', label: 'SAVE' },
+                'load-project': { emoji: '📁', label: 'LOAD' },
+                'load-sample': { emoji: '📁', label: 'LOAD' },
+                'auto-slice': { emoji: '⚡', label: 'AUTO' },
+                'manual-slice': { emoji: '✋', label: 'MANUAL' },
+                'ai-slice': { emoji: '🤖', label: 'AI' },
+                'record-arm': { emoji: '🔴', label: 'ARM' },
+                'overdub-mode': { emoji: '🎵', label: 'OVERDUB' },
+                'monitor-toggle': { emoji: '🎧', label: 'MONITOR' },
+                'mixdown-tracks': { emoji: '💾', label: 'MIXDOWN' },
+                'master-effects': { emoji: '🎛️', label: 'EFFECTS' },
+                'import-samples': { emoji: '📂', label: 'IMPORT' },
+                'clear-samples': { emoji: '🗑️', label: 'CLEAR' },
+                'midi-connect': { emoji: '🎹', label: 'MIDI' },
+                'ai-assistant': { emoji: '✨', label: 'AI' }
             };
             
-            Object.entries(labels).forEach(([id, label]) => {
+            Object.entries(buttonUpdates).forEach(([id, config]) => {
                 const element = document.getElementById(id);
                 if (element) {
-                    element.setAttribute('data-label', label);
-                    element.title = label + ' - Click to ' + label.toLowerCase();
+                    // Clear existing content and add emoji + label structure
+                    element.innerHTML = `<div>${config.emoji}</div><div class="btn-label">${config.label}</div>`;
+                    element.title = `${config.label} - Click to ${config.label.toLowerCase()}`;
                 }
             });
             
-            console.log('✨ Button labels added for clarity');
+            console.log('✨ All buttons updated with clear labels and proper emoji!');
         }, 1500);
     </script>
 
