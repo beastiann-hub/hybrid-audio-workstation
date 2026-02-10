@@ -829,12 +829,25 @@
                     });
                     
                     // Initialize basic audio engine first
-                    this.engine = new UnifiedAudioEngine();
-                    window.engine = this.engine;
+                    try {
+                        this.engine = new UnifiedAudioEngine();
+                        window.engine = this.engine;
+                        console.log('✅ UnifiedAudioEngine created');
+                    } catch (error) {
+                        console.warn('❌ UnifiedAudioEngine failed, using fallback:', error);
+                        // Fallback: create basic engine object
+                        this.engine = {
+                            context: new (window.AudioContext || window.webkitAudioContext)(),
+                            chopper: { buffer: null, filename: '', slices: [] },
+                            sampleBank: new Map(),
+                            tracks: []
+                        };
+                        console.log('✅ Fallback engine created');
+                    }
                     
                     // Initialize engine with timeout to prevent hanging
                     const initPromise = Promise.race([
-                        this.engine.init(),
+                        this.engine.init ? this.engine.init() : Promise.resolve(),
                         new Promise((_, reject) => 
                             setTimeout(() => reject(new Error('Engine init timeout')), 10000)
                         )
@@ -885,11 +898,20 @@
                     
                     // Try to initialize basic functionality anyway
                     try {
-                        this.engine = new UnifiedAudioEngine();
+                        if (!this.engine) {
+                            console.log('🔄 Creating fallback engine');
+                            this.engine = {
+                                context: new (window.AudioContext || window.webkitAudioContext)(),
+                                chopper: { buffer: null, filename: '', slices: [] },
+                                sampleBank: new Map(),
+                                tracks: []
+                            };
+                        }
                         window.engine = this.engine;
                         this.startVisualization();
+                        console.log('✅ Fallback initialization complete');
                     } catch (e) {
-                        console.error('Fallback initialization failed:', e);
+                        console.error('❌ Fallback initialization failed:', e);
                     }
                 }
             }
@@ -929,6 +951,39 @@
             }
             
             initializeEngineSubsystems() {
+                // Ensure basic engine structure exists
+                if (!this.engine) {
+                    console.error('❌ Engine not available for subsystem initialization');
+                    return;
+                }
+                
+                // Initialize audio context if not available
+                if (!this.engine.context) {
+                    try {
+                        this.engine.context = new (window.AudioContext || window.webkitAudioContext)();
+                        console.log('✅ Audio context created for engine');
+                    } catch (error) {
+                        console.error('❌ Failed to create audio context:', error);
+                        return;
+                    }
+                }
+                
+                // Initialize chopper object
+                if (!this.engine.chopper) {
+                    this.engine.chopper = {
+                        buffer: null,
+                        filename: '',
+                        slices: []
+                    };
+                    console.log('✅ Chopper object initialized');
+                }
+                
+                // Initialize sample bank
+                if (!this.engine.sampleBank) {
+                    this.engine.sampleBank = new Map();
+                    console.log('✅ Sample bank initialized');
+                }
+                
                 // Initialize existing subsystems like app.js does
                 if (this.engine.initChopper) {
                     this.engine.initChopper();
@@ -937,6 +992,8 @@
                 // Start any required processes
                 this.engine.renderTracks?.();
                 this.engine.renderSequencer?.();
+                
+                console.log('✅ Engine subsystems initialized');
             }
             
             bindExistingFunctionality() {
@@ -959,38 +1016,74 @@
             setupChopperIntegration() {
                 // Connect load sample button to file input
                 document.getElementById('load-sample')?.addEventListener('click', () => {
+                    console.log('🔪 Load sample button clicked');
+                    
+                    // Debug: Check engine state
+                    console.log('Engine state check:', {
+                        engineExists: !!this.engine,
+                        contextExists: !!this.engine?.context,
+                        chopperExists: !!this.engine?.chopper,
+                        contextState: this.engine?.context?.state
+                    });
+                    
                     const input = document.getElementById('chop-file-input');
                     if (input) {
+                        console.log('✅ Found chop file input, opening dialog');
                         input.click();
                         this.showMessage('Select audio file for chopping...', 'info');
+                    } else {
+                        console.error('❌ Chop file input not found');
+                        this.showError('File input not found');
                     }
                 });
                 
                 // Handle file selection for chopper
                 const chopInput = document.getElementById('chop-file-input');
                 if (chopInput) {
+                    console.log('✅ Setting up chop file input handler');
                     chopInput.onchange = async (e) => {
+                        console.log('📁 File selected for chopper');
                         const file = e.target.files[0];
                         if (file) {
+                            console.log(`📁 Selected file: ${file.name} (${file.type}, ${file.size} bytes)`);
                             await this.loadFileToChopper(file);
+                            // Clear the input so the same file can be selected again
+                            e.target.value = '';
+                        } else {
+                            console.log('❌ No file selected');
                         }
                     };
+                } else {
+                    console.error('❌ Chop file input element not found');
                 }
                 
                 // Auto slice button
                 document.getElementById('auto-slice')?.addEventListener('click', () => {
-                    if (this.engine?.createEqualSlices && this.engine?.chopper?.buffer) {
-                        this.engine.createEqualSlices();
-                        this.showMessage('Created equal slices', 'success');
-                        this.updatePadLabels();
-                    } else if (this.engine?.chopper?.buffer) {
-                        // Fallback: create basic equal slices
-                        this.createBasicSlices();
-                        this.showMessage('Created 8 equal slices', 'success');
-                    } else {
-                        this.showError('No audio loaded in chopper. Load a file first.');
-                    }
-                });
+                        console.log('⚡ Auto slice button clicked');
+                        
+                        if (!this.engine?.chopper?.buffer) {
+                            console.log('❌ No audio buffer in chopper');
+                            this.showError('No audio loaded in chopper. Load a file first.');
+                            return;
+                        }
+                        
+                        console.log('✅ Audio buffer found, creating slices');
+                        
+                        if (this.engine?.createEqualSlices) {
+                            this.engine.createEqualSlices();
+                            this.showMessage('Created equal slices', 'success');
+                            this.updatePadLabels();
+                        } else {
+                            // Fallback: create basic equal slices
+                            console.log('📦 Using fallback slice creation');
+                            this.createBasicSlices();
+                            this.showMessage('Created 8 equal slices', 'success');
+                        }
+                        
+                        // Debug: log slice info
+                        if (this.engine.chopper?.slices) {
+                            console.log(`🔪 Created ${this.engine.chopper.slices.length} slices:`, 
+                                       this.engine.chopper.slices.map(s => `${s.start.toFixed(2)}-${s.end.toFixed(2)}s`));
                 
                 // Manual slice mode
                 document.getElementById('manual-slice')?.addEventListener('click', () => {
@@ -2221,46 +2314,68 @@
                     this.showMessage(`Loading ${file.name}...`, 'info');
                     console.log('🔪 Loading file to chopper:', file.name);
                     
-                    // Convert file to audio buffer
-                    const arrayBuffer = await file.arrayBuffer();
-                    const audioBuffer = await this.engine.context.decodeAudioData(arrayBuffer);
-                    
-                    // Store in engine's chopper if available
-                    if (this.engine.chopper) {
-                        this.engine.chopper.buffer = audioBuffer;
-                        this.engine.chopper.filename = file.name;
-                        console.log('✅ File loaded to chopper successfully');
-                        this.showMessage(`${file.name} loaded for chopping!`, 'success');
-                        
-                        // Update chopper waveform display if available
-                        if (this.engine.renderChopper) {
-                            this.engine.renderChopper();
-                        }
-                        
-                        // Auto-create basic slices
-                        setTimeout(() => {
-                            if (this.engine.createEqualSlices) {
-                                this.engine.createEqualSlices();
-                                this.updatePadLabels();
-                            }
-                        }, 500);
-                        
-                    } else {
-                        // Fallback: create basic chopper object
-                        if (!this.engine.chopper) {
-                            this.engine.chopper = {};
-                        }
-                        this.engine.chopper.buffer = audioBuffer;
-                        this.engine.chopper.filename = file.name;
-                        this.engine.chopper.slices = [];
-                        
-                        console.log('✅ File loaded (basic chopper mode)');
-                        this.showMessage(`${file.name} loaded! Use slice buttons to chop.`, 'success');
+                    // Check if engine and context are available
+                    if (!this.engine) {
+                        console.error('❌ Engine not initialized');
+                        this.showError('Audio engine not ready. Please wait for initialization.');
+                        return;
                     }
                     
+                    if (!this.engine.context) {
+                        console.error('❌ Audio context not available');
+                        this.showError('Audio context not ready.');
+                        return;
+                    }
+                    
+                    console.log('✅ Engine and context available');
+                    
+                    // Convert file to audio buffer
+                    const arrayBuffer = await file.arrayBuffer();
+                    console.log(`📁 File read: ${arrayBuffer.byteLength} bytes`);
+                    
+                    const audioBuffer = await this.engine.context.decodeAudioData(arrayBuffer);
+                    console.log(`🎵 Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.numberOfChannels}ch`);
+                    
+                    // Initialize chopper if it doesn't exist
+                    if (!this.engine.chopper) {
+                        console.log('🔪 Initializing chopper object');
+                        this.engine.chopper = {
+                            buffer: null,
+                            filename: '',
+                            slices: []
+                        };
+                    }
+                    
+                    // Store in engine's chopper
+                    this.engine.chopper.buffer = audioBuffer;
+                    this.engine.chopper.filename = file.name;
+                    this.engine.chopper.slices = [];
+                    
+                    console.log('✅ File successfully loaded to chopper');
+                    this.showMessage(`${file.name} loaded for chopping!`, 'success');
+                    
+                    // Update chopper waveform display if available
+                    if (this.engine.renderChopper) {
+                        console.log('🎨 Rendering chopper waveform');
+                        this.engine.renderChopper();
+                    } else {
+                        console.log('ℹ️ No renderChopper method available');
+                    }
+                    
+                    // Auto-create basic slices after a short delay
+                    setTimeout(() => {
+                        this.createBasicSlices();
+                        this.showMessage(`Created 8 slices from ${file.name}`, 'success');
+                    }, 500);
+                    
                 } catch (error) {
-                    console.error('Failed to load file to chopper:', error);
-                    this.showError(`Failed to load ${file.name}`);
+                    console.error('❌ Failed to load file to chopper:', error);
+                    
+                    if (error.name === 'EncodingError') {
+                        this.showError(`Invalid audio file: ${file.name}`);
+                    } else {
+                        this.showError(`Failed to load ${file.name}: ${error.message}`);
+                    }
                 }
             }
             
