@@ -205,6 +205,40 @@
             font-size: 20px;
         }
         
+        /* Button Labels */
+        .orb-control {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1)) !important;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            border-radius: 50% !important;
+            width: 48px !important;
+            height: 48px !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+        }
+        
+        .orb-control::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border-radius: 10px;
+            white-space: nowrap;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
         .orb-control:hover {
             border-color: var(--neon-cyan);
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
@@ -239,9 +273,12 @@
         }
         
         #chop-waveform {
-            background: #000000 !important;
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 8px;
+            background: radial-gradient(ellipse at center, #001122 0%, #000510 100%) !important;
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 12px;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 255, 0.1),
+                0 0 30px rgba(0, 255, 255, 0.2);
         }
         
         .spectrum-overlay {
@@ -507,7 +544,7 @@
             <!-- Performance Workflow -->
             <div id="workflow-performance" class="workflow-content active">
                 <div class="neural-panel">
-                    <div class="panel-title">ðŸŽ¤ Live Performance Stage</div>
+                    <div class="panel-title">🎤 Live Performance Stage</div>
                     <div class="waveform-display">
                         <canvas id="performance-visualizer"></canvas>
                         <div class="spectrum-overlay"></div>
@@ -524,8 +561,8 @@
                     <div class="panel-title">âºï¸ Recording Laboratory</div>
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                         <div class="orb-control active" id="record-arm">ðŸ”´</div>
-                        <div class="orb-control" id="overdub-mode">ðŸŽµ</div>
-                        <div class="orb-control" id="monitor-toggle">ðŸŽ§</div>
+                        <div class="orb-control" id="overdub-mode">🎵</div>
+                        <div class="orb-control" id="monitor-toggle">🎧</div>
                     </div>
                     <div class="control-strip">
                         <label>Input Gain</label>
@@ -544,9 +581,9 @@
                     <div class="panel-title">ðŸ”ª Quantum Slicer</div>
                     <div style="display: flex; gap: 12px; margin-bottom: 20px;">
                         <div class="orb-control" id="load-sample">ðŸ“</div>
-                        <div class="orb-control" id="auto-slice">âš¡</div>
-                        <div class="orb-control" id="manual-slice">âœ‹</div>
-                        <div class="orb-control" id="ai-slice">ðŸ¤–</div>
+                        <div class="orb-control" id="auto-slice">⚡</div>
+                        <div class="orb-control" id="manual-slice">✋</div>
+                        <div class="orb-control" id="ai-slice">🤖</div>
                     </div>
                     <div class="waveform-display" style="height: 200px;">
                         <canvas id="chop-waveform"></canvas>
@@ -2196,7 +2233,7 @@
             }
             
             drawChopWaveform() {
-                console.log('🎨 Drawing chopper waveform...');
+                console.log('🎨 Drawing futuristic chopper waveform...');
                 const canvas = document.getElementById('chop-waveform');
                 if (!canvas) {
                     console.error('❌ Chop waveform canvas not found');
@@ -2208,34 +2245,52 @@
                     return;
                 }
                 
-                // Force canvas sizing
+                // Force canvas sizing with hi-DPI support
                 const containerWidth = canvas.offsetWidth || 800;
                 const containerHeight = canvas.offsetHeight || 200;
-                const width = canvas.width = containerWidth;
-                const height = canvas.height = containerHeight;
+                const scale = window.devicePixelRatio || 2;
+                const width = canvas.width = containerWidth * scale;
+                const height = canvas.height = containerHeight * scale;
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = containerHeight + 'px';
                 
-                console.log(`🎨 Canvas size: ${width}x${height}px`);
+                console.log(`🎨 Canvas size: ${width}x${height}px (${containerWidth}x${containerHeight} display)`);
                 
                 const ctx = canvas.getContext('2d');
+                ctx.scale(scale, scale);
                 
-                // Clear canvas with dark background
-                ctx.clearRect(0, 0, width, height);
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, width, height);
+                // Clear canvas with cyberpunk background
+                ctx.clearRect(0, 0, containerWidth, containerHeight);
+                const gradient = ctx.createLinearGradient(0, 0, 0, containerHeight);
+                gradient.addColorStop(0, '#000615');
+                gradient.addColorStop(0.5, '#001133');
+                gradient.addColorStop(1, '#000615');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
                 
                 const buffer = this.engine.chopper.buffer;
                 const data = buffer.getChannelData(0);
-                const step = Math.max(1, Math.ceil(data.length / width));
-                const amp = height / 2;
+                const step = Math.max(1, Math.ceil(data.length / containerWidth));
+                const amp = containerHeight / 2;
+                const centerY = containerHeight / 2;
                 
                 console.log(`🎵 Buffer: ${buffer.duration.toFixed(2)}s, ${data.length} samples, step: ${step}`);
                 
-                // Draw waveform
-                ctx.strokeStyle = '#00ff88';
-                ctx.lineWidth = 1;
+                // Create futuristic waveform gradient
+                const waveGradient = ctx.createLinearGradient(0, 0, containerWidth, 0);
+                waveGradient.addColorStop(0, '#00ffff');
+                waveGradient.addColorStop(0.3, '#0088ff');
+                waveGradient.addColorStop(0.7, '#ff0088');
+                waveGradient.addColorStop(1, '#ff00ff');
+                
+                // Draw glow effect for waveform
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 8;
+                ctx.strokeStyle = waveGradient;
+                ctx.lineWidth = 2;
                 ctx.beginPath();
                 
-                for (let i = 0; i < width; i++) {
+                for (let i = 0; i < containerWidth; i++) {
                     let min = 1.0, max = -1.0;
                     for (let j = 0; j < step; j++) {
                         const idx = (i * step) + j;
@@ -2244,44 +2299,86 @@
                         if (data[idx] > max) max = data[idx];
                     }
                     
-                    const y1 = (1 + min) * amp;
-                    const y2 = (1 + max) * amp;
+                    const y1 = centerY + (min * amp * 0.8);
+                    const y2 = centerY + (max * amp * 0.8);
                     
                     ctx.moveTo(i, y1);
                     ctx.lineTo(i, y2);
                 }
                 ctx.stroke();
                 
-                console.log('✅ Waveform drawn');
+                // Draw center line
+                ctx.shadowBlur = 2;
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(containerWidth, centerY);
+                ctx.stroke();
                 
-                // Draw slice markers
+                console.log('✅ Futuristic waveform drawn');
+                
+                // Draw slice markers with neon effect
                 const slices = this.engine.chopper.slices;
                 if (slices && slices.length > 0) {
                     const duration = buffer.duration;
-                    ctx.strokeStyle = '#ff00ff';
-                    ctx.lineWidth = 2;
                     
                     slices.forEach((slice, index) => {
                         if (index === 0) return; // Skip first marker at 0
-                        const x = (slice.start / duration) * width;
+                        const x = (slice.start / duration) * containerWidth;
                         
+                        // Bright neon slice line with glow
+                        ctx.shadowColor = '#ff00ff';
+                        ctx.shadowBlur = 15;
+                        ctx.strokeStyle = '#ff00ff';
+                        ctx.lineWidth = 3;
                         ctx.beginPath();
                         ctx.moveTo(x, 0);
-                        ctx.lineTo(x, height);
+                        ctx.lineTo(x, containerHeight);
                         ctx.stroke();
                         
-                        // Label
-                        ctx.fillStyle = '#ff00ff';
+                        // Inner bright line
+                        ctx.shadowBlur = 5;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, containerHeight);
+                        ctx.stroke();
+                        
+                        // Cyberpunk slice labels
+                        ctx.shadowBlur = 0;
+                        const label = (index + 1).toString();
+                        const labelWidth = 24;
+                        const labelHeight = 16;
+                        
+                        // Label background with gradient
+                        const labelGradient = ctx.createLinearGradient(x, 0, x + labelWidth, labelHeight);
+                        labelGradient.addColorStop(0, 'rgba(255, 0, 255, 0.8)');
+                        labelGradient.addColorStop(1, 'rgba(0, 255, 255, 0.8)');
+                        ctx.fillStyle = labelGradient;
+                        ctx.fillRect(x + 2, 2, labelWidth, labelHeight);
+                        
+                        // Label border glow
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x + 2, 2, labelWidth, labelHeight);
+                        
+                        // Label text
+                        ctx.fillStyle = '#000000';
                         ctx.font = 'bold 12px monospace';
-                        ctx.fillText((index + 1).toString(), x + 3, 15);
+                        ctx.textAlign = 'center';
+                        ctx.fillText(label, x + 2 + labelWidth/2, 14);
                     });
                     
-                    console.log(`🔪 Drew ${slices.length - 1} slice markers`);
+                    console.log(`🔪 Drew ${slices.length - 1} futuristic slice markers`);
                 } else {
                     console.log('ℹ️ No slices to draw');
                 }
                 
-                console.log('✅ Chopper waveform drawing complete');
+                // Reset shadow
+                ctx.shadowBlur = 0;
+                console.log('✅ Futuristic chopper waveform complete');
             }
             
             initMixWorkflow() {
@@ -2645,6 +2742,44 @@
     </script>
     
     <!-- Service Worker Registration -->
+    <!-- Button Labeling Script for Better UX -->
+    <script>
+        // Add clear labels to make buttons less cryptic
+        setTimeout(() => {
+            const labels = {
+                'load-sample': 'LOAD',
+                'auto-slice': 'AUTO',
+                'manual-slice': 'MANUAL', 
+                'ai-slice': 'AI',
+                'play-all': 'PLAY',
+                'stop-all': 'STOP',
+                'record-mode': 'REC',
+                'metronome': 'METRO',
+                'save-project': 'SAVE',
+                'load-project': 'LOAD',
+                'record-arm': 'ARM',
+                'overdub-mode': 'OVERDUB',
+                'monitor-toggle': 'MONITOR',
+                'mixdown-tracks': 'MIXDOWN',
+                'master-effects': 'EFFECTS',
+                'import-samples': 'IMPORT',
+                'clear-samples': 'CLEAR',
+                'midi-connect': 'MIDI',
+                'ai-assistant': 'AI'
+            };
+            
+            Object.entries(labels).forEach(([id, label]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.setAttribute('data-label', label);
+                    element.title = label + ' - Click to ' + label.toLowerCase();
+                }
+            });
+            
+            console.log('✨ Button labels added for clarity');
+        }, 1500);
+    </script>
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
