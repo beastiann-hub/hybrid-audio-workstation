@@ -234,6 +234,14 @@
         .waveform-display canvas {
             width: 100%;
             height: 100%;
+            display: block;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        #chop-waveform {
+            background: #000000 !important;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
         }
         
         .spectrum-overlay {
@@ -1138,6 +1146,17 @@
                         this.drawChopWaveform();
                         this.initializeSlicePads();
                         this.showMessage('AI features not available. Created basic slices.', 'info');
+                    }
+                });
+                
+                // Manual waveform redraw button handler (for debugging)
+                document.getElementById('redraw-waveform')?.addEventListener('click', () => {
+                    console.log('🎨 Manual waveform redraw requested');
+                    if (this.engine?.chopper?.buffer) {
+                        this.drawChopWaveform();
+                        this.showMessage('Waveform redrawn', 'success');
+                    } else {
+                        this.showError('No audio loaded to redraw');
                     }
                 });
             }
@@ -2177,15 +2196,31 @@
             }
             
             drawChopWaveform() {
+                console.log('🎨 Drawing chopper waveform...');
                 const canvas = document.getElementById('chop-waveform');
-                if (!canvas || !this.engine?.chopper?.buffer) return;
+                if (!canvas) {
+                    console.error('❌ Chop waveform canvas not found');
+                    return;
+                }
                 
-                const width = canvas.width = canvas.offsetWidth || 800;
-                const height = canvas.height = canvas.offsetHeight || 200;
+                if (!this.engine?.chopper?.buffer) {
+                    console.error('❌ No audio buffer in chopper');
+                    return;
+                }
+                
+                // Force canvas sizing
+                const containerWidth = canvas.offsetWidth || 800;
+                const containerHeight = canvas.offsetHeight || 200;
+                const width = canvas.width = containerWidth;
+                const height = canvas.height = containerHeight;
+                
+                console.log(`🎨 Canvas size: ${width}x${height}px`);
+                
                 const ctx = canvas.getContext('2d');
                 
+                // Clear canvas with dark background
                 ctx.clearRect(0, 0, width, height);
-                ctx.fillStyle = '#0a0a0a';
+                ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, width, height);
                 
                 const buffer = this.engine.chopper.buffer;
@@ -2193,9 +2228,13 @@
                 const step = Math.max(1, Math.ceil(data.length / width));
                 const amp = height / 2;
                 
+                console.log(`🎵 Buffer: ${buffer.duration.toFixed(2)}s, ${data.length} samples, step: ${step}`);
+                
+                // Draw waveform
                 ctx.strokeStyle = '#00ff88';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
+                
                 for (let i = 0; i < width; i++) {
                     let min = 1.0, max = -1.0;
                     for (let j = 0; j < step; j++) {
@@ -2204,28 +2243,45 @@
                         if (data[idx] < min) min = data[idx];
                         if (data[idx] > max) max = data[idx];
                     }
-                    ctx.moveTo(i, (1 + min) * amp);
-                    ctx.lineTo(i, (1 + max) * amp);
+                    
+                    const y1 = (1 + min) * amp;
+                    const y2 = (1 + max) * amp;
+                    
+                    ctx.moveTo(i, y1);
+                    ctx.lineTo(i, y2);
                 }
                 ctx.stroke();
                 
+                console.log('✅ Waveform drawn');
+                
+                // Draw slice markers
                 const slices = this.engine.chopper.slices;
                 if (slices && slices.length > 0) {
                     const duration = buffer.duration;
                     ctx.strokeStyle = '#ff00ff';
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = 2;
+                    
                     slices.forEach((slice, index) => {
-                        if (index === 0) return;
+                        if (index === 0) return; // Skip first marker at 0
                         const x = (slice.start / duration) * width;
+                        
                         ctx.beginPath();
                         ctx.moveTo(x, 0);
                         ctx.lineTo(x, height);
                         ctx.stroke();
+                        
+                        // Label
                         ctx.fillStyle = '#ff00ff';
-                        ctx.font = '10px monospace';
-                        ctx.fillText(index + 1, x + 2, 12);
+                        ctx.font = 'bold 12px monospace';
+                        ctx.fillText((index + 1).toString(), x + 3, 15);
                     });
+                    
+                    console.log(`🔪 Drew ${slices.length - 1} slice markers`);
+                } else {
+                    console.log('ℹ️ No slices to draw');
                 }
+                
+                console.log('✅ Chopper waveform drawing complete');
             }
             
             initMixWorkflow() {
@@ -2454,10 +2510,16 @@
                     // Auto-create basic slices after a short delay
                     setTimeout(() => {
                         this.createBasicSlices();
-                        this.drawChopWaveform();
+                        this.drawChopWaveform(); // Draw again after slices are created
                         this.initializeSlicePads();
                         this.showMessage(`Created 8 slices from ${file.name}`, 'success');
                     }, 300);
+                    
+                    // Redraw waveform after a longer delay to ensure canvas is properly sized
+                    setTimeout(() => {
+                        console.log('🕐 Delayed waveform redraw...');
+                        this.drawChopWaveform();
+                    }, 1000);
 
                     
                 } catch (error) {
