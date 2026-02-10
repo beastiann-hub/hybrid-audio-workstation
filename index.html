@@ -316,6 +316,26 @@
             }
         }
         
+        @media (max-width: 768px) {
+            .neural-workspace {
+                padding: 15px;
+                gap: 15px;
+                /* Ensure dark background on mobile */
+                background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.08) 0%, rgba(10, 10, 10, 0.95) 70%);
+            }
+            
+            .neural-panel {
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(10px);
+            }
+            
+            .orb-control {
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 18px;
+            }
+        }
+        
         @keyframes slideIn {
             from { transform: translate(-50%, -30px); opacity: 0; }
             to { transform: translate(-50%, 0); opacity: 1; }
