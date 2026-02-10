@@ -128,11 +128,14 @@
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             position: relative;
             overflow: hidden;
+            color: white;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
         
         .neural-pad::before {
@@ -309,6 +312,44 @@
             color: var(--neon-cyan);
         }
         
+        /* iPad and tablet optimizations */
+        @media (min-width: 768px) and (max-width: 1200px) {
+            .neural-workspace {
+                grid-template-columns: 240px 1fr 240px;
+                grid-template-rows: 60px 1fr 70px;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .neural-pad {
+                background: rgba(0, 255, 255, 0.2);
+                border: 2px solid rgba(0, 255, 255, 0.4);
+                min-height: 60px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            
+            .neural-pad:hover,
+            .neural-pad:active {
+                background: rgba(0, 255, 255, 0.4);
+                border-color: var(--neon-cyan);
+            }
+            
+            .orb-control {
+                min-width: 50px;
+                min-height: 50px;
+                font-size: 18px;
+                border: 2px solid rgba(0, 255, 255, 0.4);
+                background: rgba(0, 255, 255, 0.1);
+            }
+            
+            .orb-control:hover,
+            .orb-control:active {
+                background: rgba(0, 255, 255, 0.3);
+                border-color: var(--neon-cyan);
+            }
+        }
+        
         @media (max-width: 1200px) {
             .neural-workspace {
                 grid-template-columns: 1fr;
@@ -316,7 +357,7 @@
             }
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .neural-workspace {
                 padding: 15px;
                 gap: 15px;
@@ -329,10 +370,18 @@
                 backdrop-filter: blur(10px);
             }
             
+            .neural-pad {
+                background: rgba(0, 255, 255, 0.25);
+                border: 2px solid rgba(0, 255, 255, 0.5);
+                min-height: 55px;
+            }
+            
             .orb-control {
                 min-width: 44px;
                 min-height: 44px;
                 font-size: 18px;
+                background: rgba(0, 255, 255, 0.15);
+                border: 2px solid rgba(0, 255, 255, 0.4);
             }
         }
         

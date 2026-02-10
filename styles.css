@@ -912,7 +912,7 @@ select option {
 }
 
 /* === iPad-specific optimizations === */
-@media (max-width: 1024px) and (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1024px) {
     /* iPad portrait and landscape */
     .container {
         padding: var(--spacing-md);
@@ -921,6 +921,14 @@ select option {
     .btn, .mode-btn {
         min-height: 44px; /* Apple's recommended touch target size */
         padding: 12px 24px;
+        background: rgba(0, 255, 255, 0.1);
+        border: 2px solid rgba(0, 255, 255, 0.3);
+    }
+    
+    .btn:hover, .mode-btn:hover,
+    .btn:active, .mode-btn:active {
+        background: rgba(0, 255, 255, 0.2);
+        border-color: var(--neon-cyan);
     }
     
     .sample-grid {
@@ -931,6 +939,15 @@ select option {
     .mpc-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
+    }
+    
+    /* Enhanced button visibility for iPad */
+    .neural-pad, .sample-pad,
+    .btn, .mode-btn {
+        background: rgba(0, 255, 255, 0.15) !important;
+        border: 2px solid rgba(0, 255, 255, 0.4) !important;
+        color: white !important;
+        font-weight: 600;
     }
     
     /* Larger touch targets for sliders and controls */
