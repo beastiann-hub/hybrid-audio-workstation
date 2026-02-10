@@ -18,6 +18,13 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
     <style>
+        /* Global dark theme enforcement */
+        html, body {
+            background: #0a0a0a !important;
+            background-color: #0a0a0a !important;
+            min-height: 100vh;
+        }
+        
         /* Neural Interface Design */
         :root {
             --neon-cyan: #00ffff;
@@ -35,7 +42,8 @@
             gap: 20px;
             height: 100vh;
             padding: 20px;
-            background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+            background: #0a0a0a !important;
+            background-color: #0a0a0a !important;
             overflow: hidden;
         }
         
@@ -314,11 +322,23 @@
         
         /* iPad and tablet optimizations */
         @media (min-width: 768px) and (max-width: 1200px) {
+            html, body {
+                background: #0a0a0a !important;
+                background-color: #0a0a0a !important;
+            }
+            
             .neural-workspace {
                 grid-template-columns: 240px 1fr 240px;
                 grid-template-rows: 60px 1fr 70px;
                 gap: 15px;
                 padding: 15px;
+                background: #0a0a0a !important;
+                background-color: #0a0a0a !important;
+            }
+            
+            .neural-panel {
+                background: rgba(0, 0, 0, 0.9) !important;
+                backdrop-filter: blur(10px);
             }
             
             .neural-pad {
@@ -351,22 +371,34 @@
         }
         
         @media (max-width: 1200px) {
+            html, body {
+                background: #0a0a0a !important;
+                background-color: #0a0a0a !important;
+            }
+            
             .neural-workspace {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto 1fr auto;
+                background: #0a0a0a !important;
+                background-color: #0a0a0a !important;
             }
         }
         
         @media (max-width: 767px) {
+            html, body {
+                background: #0a0a0a !important;
+                background-color: #0a0a0a !important;
+            }
+            
             .neural-workspace {
                 padding: 15px;
                 gap: 15px;
-                /* Ensure dark background on mobile */
-                background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.08) 0%, rgba(10, 10, 10, 0.95) 70%);
+                background: #0a0a0a !important;
+                background-color: #0a0a0a !important;
             }
             
             .neural-panel {
-                background: rgba(0, 0, 0, 0.8);
+                background: rgba(0, 0, 0, 0.9) !important;
                 backdrop-filter: blur(10px);
             }
             
