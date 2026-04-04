@@ -173,27 +173,59 @@ function computeOnsetDetectionFunction(data, sampleRate, sensitivity) {
 }
 
 /**
- * Compute magnitude spectrum using simple DFT
+ * Compute magnitude spectrum using Cooley-Tukey FFT (O(N log N))
+ * Replaces naive DFT which caused main-thread freeze on large buffers.
  */
 function computeSpectrum(data, start, size) {
-  const spectrum = new Float32Array(size / 2);
-  
-  // Simple magnitude calculation (not full FFT but adequate for onset detection)
-  for (let k = 0; k < size / 2; k++) {
-    let real = 0, imag = 0;
-    
-    for (let n = 0; n < size; n++) {
-      const sample = data[start + n] || 0;
-      // Hann window
-      const window = 0.5 * (1 - Math.cos(2 * Math.PI * n / size));
-      const angle = -2 * Math.PI * k * n / size;
-      real += sample * window * Math.cos(angle);
-      imag += sample * window * Math.sin(angle);
-    }
-    
-    spectrum[k] = Math.sqrt(real * real + imag * imag);
+  // Apply Hann window and copy input
+  const real = new Float32Array(size);
+  const imag = new Float32Array(size);
+  for (let n = 0; n < size; n++) {
+    const w = 0.5 * (1 - Math.cos(2 * Math.PI * n / size));
+    real[n] = (data[start + n] || 0) * w;
   }
-  
+
+  // In-place Cooley-Tukey radix-2 FFT (size must be power of 2)
+  // Bit-reversal permutation
+  let j = 0;
+  for (let i = 1; i < size; i++) {
+    let bit = size >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      [real[i], real[j]] = [real[j], real[i]];
+      [imag[i], imag[j]] = [imag[j], imag[i]];
+    }
+  }
+
+  // FFT butterfly
+  for (let len = 2; len <= size; len <<= 1) {
+    const ang = -2 * Math.PI / len;
+    const wRe = Math.cos(ang);
+    const wIm = Math.sin(ang);
+    for (let i = 0; i < size; i += len) {
+      let curRe = 1, curIm = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const uRe = real[i + k];
+        const uIm = imag[i + k];
+        const vRe = real[i + k + len / 2] * curRe - imag[i + k + len / 2] * curIm;
+        const vIm = real[i + k + len / 2] * curIm + imag[i + k + len / 2] * curRe;
+        real[i + k] = uRe + vRe;
+        imag[i + k] = uIm + vIm;
+        real[i + k + len / 2] = uRe - vRe;
+        imag[i + k + len / 2] = uIm - vIm;
+        const nextRe = curRe * wRe - curIm * wIm;
+        curIm = curRe * wIm + curIm * wRe;
+        curRe = nextRe;
+      }
+    }
+  }
+
+  // Return magnitude spectrum (first half)
+  const spectrum = new Float32Array(size / 2);
+  for (let k = 0; k < size / 2; k++) {
+    spectrum[k] = Math.sqrt(real[k] * real[k] + imag[k] * imag[k]);
+  }
   return spectrum;
 }
 
@@ -734,25 +766,25 @@ function getAIPanelHTML() {
   return `
     <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;border:2px solid #00ff88;border-radius:12px;padding:20px;z-index:10000;min-width:500px;max-height:80vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-        <h3 style="color:#00ff88;margin:0;">ðŸ¤– AI Features</h3>
-        <button onclick="document.getElementById('ai-panel').style.display='none'" style="background:#ff4444;border:none;color:#fff;padding:5px 10px;border-radius:4px;cursor:pointer;">âœ•</button>
+        <h3 style="color:#00ff88;margin:0;">🤖 AI Features</h3>
+        <button onclick="document.getElementById('ai-panel').style.display='none'" style="background:#ff4444;border:none;color:#fff;padding:5px 10px;border-radius:4px;cursor:pointer;">✕</button>
       </div>
       
       <!-- API Key Section -->
       <div style="background:#0a0a0a;padding:15px;border-radius:8px;margin-bottom:15px;">
-        <h4 style="color:#00ccff;margin:0 0 10px 0;">ðŸ”‘ API Configuration</h4>
+        <h4 style="color:#00ccff;margin:0 0 10px 0;">🔑 API Configuration</h4>
         <p style="font-size:12px;opacity:0.7;margin-bottom:10px;">Get your API key from <a href="https://replicate.com" target="_blank" style="color:#00ff88;">replicate.com</a></p>
         <label for="ai-api-key" class="sr-only">Replicate API Key</label>
-        <input type="password" id="ai-api-key" placeholder="Enter Replicate API key" value="${hasKey ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : ''}" style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #444;color:#fff;border-radius:4px;" aria-label="Replicate API Key">
+        <input type="password" id="ai-api-key" placeholder="Enter Replicate API key" value="${hasKey ? '••••••••••••' : ''}" style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #444;color:#fff;border-radius:4px;" aria-label="Replicate API Key">
         <button id="ai-save-key" style="margin-top:10px;padding:8px 15px;background:linear-gradient(135deg,#00ff88,#00ccff);border:none;color:#000;border-radius:4px;cursor:pointer;font-weight:bold;">Save Key</button>
-        <span id="ai-key-status" style="margin-left:10px;font-size:12px;">${hasKey ? 'âœ… Key saved' : ''}</span>
+        <span id="ai-key-status" style="margin-left:10px;font-size:12px;">${hasKey ? '✅ Key saved' : ''}</span>
       </div>
       
       <!-- Beat Detection Section -->
       <div style="background:#0a0a0a;padding:15px;border-radius:8px;margin-bottom:15px;">
-        <h4 style="color:#ff8800;margin:0 0 10px 0;">ðŸ¥ Beat Detection</h4>
+        <h4 style="color:#ff8800;margin:0 0 10px 0;">🥁 Beat Detection</h4>
         <p style="font-size:12px;opacity:0.7;margin-bottom:10px;">Analyze audio to detect BPM, beats, and downbeats (works offline)</p>
-        <button id="ai-detect-beats" class="btn" style="width:100%;">ðŸŽ¯ Detect Beats in Chopper</button>
+        <button id="ai-detect-beats" class="btn" style="width:100%;">🎯 Detect Beats in Chopper</button>
         <div id="beat-detection-results" style="margin-top:10px;display:none;padding:10px;background:#1a1a2e;border-radius:4px;">
           <div>BPM: <span id="detected-bpm">--</span> (confidence: <span id="bpm-confidence">--</span>)</div>
           <div>Total beats: <span id="total-beats">--</span></div>
@@ -765,7 +797,7 @@ function getAIPanelHTML() {
       
       <!-- Sample Generation Section -->
       <div style="background:#0a0a0a;padding:15px;border-radius:8px;margin-bottom:15px;">
-        <h4 style="color:#00ff88;margin:0 0 10px 0;">ðŸŽµ AI Sample Generation</h4>
+        <h4 style="color:#00ff88;margin:0 0 10px 0;">🎵 AI Sample Generation</h4>
         <p style="font-size:12px;opacity:0.7;margin-bottom:10px;">Generate audio samples using AI (requires API key)</p>
         
         <div style="margin-bottom:10px;">
@@ -810,7 +842,7 @@ function getAIPanelHTML() {
         </div>
         
         <button id="ai-generate" class="btn btn-primary" style="width:100%;margin-top:15px;" ${!hasKey ? 'disabled' : ''}>
-          âœ¨ Generate Sample
+          ✨ Generate Sample
         </button>
         
         <div id="ai-generation-progress" style="display:none;margin-top:10px;">
@@ -823,20 +855,20 @@ function getAIPanelHTML() {
       
       <!-- Stem Separation Section -->
       <div style="background:#0a0a0a;padding:15px;border-radius:8px;">
-        <h4 style="color:#ff00ff;margin:0 0 10px 0;">ðŸŽšï¸ Stem Separation</h4>
+        <h4 style="color:#ff00ff;margin:0 0 10px 0;">🎚️ Stem Separation</h4>
         <p style="font-size:12px;opacity:0.7;margin-bottom:10px;">Split audio into drums, bass, vocals, and other (requires API key)</p>
         
         <button id="ai-separate-chopper" class="btn" style="width:100%;" ${!hasKey ? 'disabled' : ''}>
-          ðŸ”€ Separate Stems from Chopper
+          🔀 Separate Stems from Chopper
         </button>
         
         <div id="stem-results" style="display:none;margin-top:10px;">
           <p style="font-size:12px;margin-bottom:10px;">Stems ready! Send to tracks:</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <button id="stem-drums" class="btn mini-btn">ðŸ¥ Drums â†’ Track</button>
-            <button id="stem-bass" class="btn mini-btn">ðŸŽ¸ Bass â†’ Track</button>
-            <button id="stem-vocals" class="btn mini-btn">ðŸŽ¤ Vocals â†’ Track</button>
-            <button id="stem-other" class="btn mini-btn">ðŸŽ¹ Other â†’ Track</button>
+            <button id="stem-drums" class="btn mini-btn">🥁 Drums → Track</button>
+            <button id="stem-bass" class="btn mini-btn">🎸 Bass → Track</button>
+            <button id="stem-vocals" class="btn mini-btn">🎤 Vocals → Track</button>
+            <button id="stem-other" class="btn mini-btn">🎹 Other → Track</button>
           </div>
         </div>
       </div>
@@ -848,9 +880,9 @@ function bindAIPanelEvents() {
   // API Key
   document.getElementById('ai-save-key')?.addEventListener('click', () => {
     const input = document.getElementById('ai-api-key');
-    if (input.value && !input.value.includes('â€¢')) {
+    if (input.value && !input.value.startsWith('•')) {
       setReplicateApiKey(input.value);
-      document.getElementById('ai-key-status').textContent = 'âœ… Key saved';
+      document.getElementById('ai-key-status').textContent = '✅ Key saved';
       document.getElementById('ai-generate').disabled = false;
       document.getElementById('ai-separate-chopper').disabled = false;
     }

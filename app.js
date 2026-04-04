@@ -1,10 +1,8 @@
-// app.js - Enhanced Neural Interface Integration
-// Hybrid Audio Workstation with Neural Workflow Management
+// app.js - Single entry-point for the Hybrid Audio Workstation
+// Owns the UnifiedAudioEngine lifecycle and hands the instance to the
+// NeuralWorkflowManager after initialization.
 
-// Import neural interface
-import { NeuralWorkflowManager, neuralInterface } from './neural-app.js';
-
-// Legacy compatibility - maintain existing functionality while enhancing with neural features
+import { neuralInterface } from './neural-app.js';
 import { UnifiedAudioEngine } from './engine.js';
 import { ensureAudioContextRunning } from './core.js';
 
@@ -19,18 +17,14 @@ let showAIPanel, detectBeats, setReplicateApiKey, hasApiKey, generateSample, sep
 async function loadOptionalModules() {
   console.log('🧠 Loading Neural Enhancement Modules...');
   
-  // Initialize neural interface first
-  if (!window.neuralInterface) {
-    console.log('✅ Neural Interface initialized');
-  }
-  
-  // MIDI module with neural integration
+  // MIDI module
   try {
     const midi = await import('./midi.js');
     initMIDI = midi.initMIDI;
     showMIDIMappingUI = midi.showMIDIMappingUI;
     exportMIDIMappings = midi.exportMIDIMappings;
     importMIDIMappings = midi.importMIDIMappings;
+    window.initMIDI = initMIDI; // exposed for neural-app.js
     console.log('✅ MIDI module loaded');
   } catch (e) {
     console.warn('MIDI module not available:', e.message);
@@ -424,6 +418,33 @@ function bindUI() {
   document.getElementById('chop-clear-markers')?.addEventListener('click', () => engine.clearSliceMarkers?.());
   document.getElementById('chop-equal')?.addEventListener('click', () => engine.createEqualSlices?.());
   document.getElementById('chop-detect')?.addEventListener('click', () => engine.detectTransients?.());
+  document.getElementById('chop-ai-slice')?.addEventListener('click', () => {
+    if (!engine.chopper?.buffer) {
+      engine.updateStatus?.('Load audio file first');
+      return;
+    }
+    if (detectBeats) {
+      try {
+        const beatData = detectBeats(engine.chopper.buffer, { sensitivity: engine.chopper.sensitivity });
+        if (beatData?.beats?.length > 0) {
+          engine.chopper.sliceMarkers = beatData.beats.map(beat => beat.time);
+          engine.updateSlicesFromMarkers?.();
+          engine.drawChopperWaveform?.();
+          engine.renderChopperPads?.();
+          engine.updateStatus?.(`AI detected ${beatData.beats.length} beats at ${beatData.bpm.toFixed(1)} BPM`);
+        } else {
+          engine.updateStatus?.('AI beat detection found no clear beats - try adjusting sensitivity');
+        }
+      } catch (e) {
+        console.error('AI beat detection failed:', e);
+        engine.updateStatus?.('AI beat detection failed - using fallback transient detection');
+        engine.detectTransients?.();
+      }
+    } else {
+      engine.updateStatus?.('AI features not loaded - using transient detection');
+      engine.detectTransients?.();
+    }
+  });
   document.getElementById('chop-to-rows')?.addEventListener('click', () => engine.slicesToSequencerRows?.());
   document.getElementById('chop-to-tracks')?.addEventListener('click', () => engine.slicesToLoopTracks?.());
   document.getElementById('chop-export-all')?.addEventListener('click', () => engine.exportAllSlices?.());
@@ -709,34 +730,12 @@ document.addEventListener('keydown', (e) => {
     document.getElementById('metronome-toggle')?.click();
   }
   
-  // Number keys 1-8 for samples/tracks
-  if (e.key >= '1' && e.key <= '8' && !e.shiftKey) {
+  // Number keys 1-8 for samples/tracks (no conflict: neural-app uses Digit5-8 for workflow)
+  if (e.key >= '1' && e.key <= '4' && !e.shiftKey) {
     const index = parseInt(e.key) - 1;
     engine.playSample?.(index);
   }
-  
-  // MPC pad keys
-  const mpcKeyMap = {
-    'q': 0, 'w': 1, 'e': 2, 'r': 3,
-    'a': 4, 's': 5, 'd': 6, 'f': 7,
-    'z': 8, 'x': 9, 'c': 10, 'v': 11
-  };
-  
-  if (mpcKeyMap[e.key.toLowerCase()] !== undefined) {
-    const padIndex = mpcKeyMap[e.key.toLowerCase()];
-    if (engine.mpc?.mode === 'slices') {
-      engine.playSlice?.(padIndex);
-    } else {
-      engine.playSample?.(padIndex);
-    }
-    
-    // Visual feedback
-    const pad = document.querySelector(`.mpc-pad[data-index="${padIndex}"]`);
-    if (pad) {
-      pad.classList.add('active');
-      setTimeout(() => pad.classList.remove('active'), 100);
-    }
-  }
+  // Note: Q-V pad keys and Digit5-8 workflow keys are handled by neural-app.js
 });
 
 // ==================== Window Events ====================
@@ -800,6 +799,14 @@ window.addEventListener('DOMContentLoaded', () => {
       // Bind all UI events
       bindUI();
       setupModeSwitcher();
+      
+      // Hand the ready engine to the Neural Interface Controller.
+      // This is the single moment where both halves are connected.
+      neuralInterface.setEngine(engine);
+      
+      // Expose project functions globally so neural-app.js can delegate to them
+      window.saveCurrentProject = saveCurrentProject;
+      window.showProjectList    = showProjectList;
       
       // Add global handler for audio context resume on any user interaction
       document.addEventListener('click', async () => {

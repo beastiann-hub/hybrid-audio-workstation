@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="HAW">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸ›ï¸</text></svg>">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
@@ -205,6 +205,36 @@
             font-size: 20px;
         }
         
+        /* Clear Button Labels */
+        .orb-control {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1)) !important;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            border-radius: 50% !important;
+            width: 56px !important;
+            height: 56px !important;
+            font-size: 18px !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+            gap: 2px !important;
+        }
+        
+        .btn-label {
+            font-size: 8px !important;
+            color: rgba(0, 255, 255, 0.9) !important;
+            font-family: 'Courier New', monospace !important;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            text-shadow: 0 0 4px rgba(0, 255, 255, 0.5) !important;
+            margin-top: 1px !important;
+        }
+
         .orb-control:hover {
             border-color: var(--neon-cyan);
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
@@ -234,6 +264,22 @@
         .waveform-display canvas {
             width: 100%;
             height: 100%;
+            display: block;
+            background: radial-gradient(ellipse at center, #001122 0%, #000510 100%) !important;
+            border: 2px solid rgba(0, 255, 255, 0.4) !important;
+            border-radius: 12px !important;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 255, 0.1),
+                0 0 30px rgba(0, 255, 255, 0.2) !important;
+        }
+        
+        #chop-waveform {
+            background: radial-gradient(ellipse at center, #001122 0%, #000510 100%) !important;
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 12px;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 255, 255, 0.1),
+                0 0 30px rgba(0, 255, 255, 0.2);
         }
         
         .spectrum-overlay {
@@ -437,7 +483,7 @@
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <h2>🎵 Neural Audio Engine</h2>
+            <h2>ðŸŽµ Neural Audio Engine</h2>
             <p style="margin-top: 10px; opacity: 0.9; font-size: 18px; font-weight: 500;">Initializing Quantum Processing...</p>
             <p style="margin-top: 5px; opacity: 0.7; font-size: 14px;">Touch to activate neural interface</p>
         </div>
@@ -448,12 +494,12 @@
         <!-- Header Command Center -->
         <header class="neural-header">
             <div style="display: flex; align-items: center; gap: 20px;">
-                <h1 style="font-size: 20px; margin: 0;">🏛️ Neural Studio</h1>
+                <h1 style="font-size: 20px; margin: 0;">ðŸ›ï¸ Neural Studio</h1>
                 <div class="workflow-selector">
-                    <button class="workflow-tab active" data-workflow="performance">🎹 Live</button>
-                    <button class="workflow-tab" data-workflow="capture">⏺️ Capture</button>
-                    <button class="workflow-tab" data-workflow="chop">🔪 Chop</button>
-                    <button class="workflow-tab" data-workflow="mix">🎛️ Mix</button>
+                    <button class="workflow-tab active" data-workflow="performance">ðŸŽ¹ Live</button>
+                    <button class="workflow-tab" data-workflow="capture">âºï¸ Capture</button>
+                    <button class="workflow-tab" data-workflow="chop">ðŸ”ª Chop</button>
+                    <button class="workflow-tab" data-workflow="mix">ðŸŽ›ï¸ Mix</button>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 20px;">
@@ -471,12 +517,12 @@
 
         <!-- Left Panel: Performance Interface -->
         <aside class="neural-panel">
-            <div class="panel-title">🎹 Neural Pads</div>
+            <div class="panel-title">ðŸŽ¹ Neural Pads</div>
             <div class="neural-grid" id="performance-pads">
                 <!-- 16 pads generated by JS -->
             </div>
             <div style="text-align: center; margin-top: 15px;">
-                <div class="orb-control" id="pad-mode-cycle" style="width: 40px; height: 40px; font-size: 16px;">🎵</div>
+                <div class="orb-control" id="pad-mode-cycle" style="width: 40px; height: 40px; font-size: 16px;">ðŸŽµ</div>
                 <p style="font-size: 10px; opacity: 0.6; margin-top: 8px;">Q-R A-F Z-V 1-4</p>
             </div>
             
@@ -513,9 +559,9 @@
             <!-- Capture Workflow -->
             <div id="workflow-capture" class="workflow-content">
                 <div class="neural-panel">
-                    <div class="panel-title">⏺️ Recording Laboratory</div>
+                    <div class="panel-title">âºï¸ Recording Laboratory</div>
                     <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div class="orb-control active" id="record-arm">🔴</div>
+                        <div class="orb-control active" id="record-arm">ðŸ”´</div>
                         <div class="orb-control" id="overdub-mode">🎵</div>
                         <div class="orb-control" id="monitor-toggle">🎧</div>
                     </div>
@@ -533,9 +579,9 @@
             <!-- Chop Workflow -->
             <div id="workflow-chop" class="workflow-content">
                 <div class="neural-panel">
-                    <div class="panel-title">🔪 Quantum Slicer</div>
+                    <div class="panel-title">ðŸ”ª Quantum Slicer</div>
                     <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                        <div class="orb-control" id="load-sample">📁</div>
+                        <div class="orb-control" id="load-sample">ðŸ“</div>
                         <div class="orb-control" id="auto-slice">⚡</div>
                         <div class="orb-control" id="manual-slice">✋</div>
                         <div class="orb-control" id="ai-slice">🤖</div>
@@ -553,24 +599,24 @@
             <!-- Mix Workflow -->
             <div id="workflow-mix" class="workflow-content">
                 <div class="neural-panel">
-                    <div class="panel-title">🎛️ Mixing Matrix</div>
+                    <div class="panel-title">ðŸŽ›ï¸ Mixing Matrix</div>
                     <div id="mixer-strips" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-bottom: 20px;">
                         <!-- Mixer strips generated by JS -->
                     </div>
                     <div style="background: rgba(0,0,0,0.4); border-radius: 15px; padding: 20px;">
-                        <div class="panel-title">🎚️ Master Control</div>
+                        <div class="panel-title">ðŸŽšï¸ Master Control</div>
                         <div class="control-strip">
                             <label>Master Vol</label>
                             <input type="range" id="master-volume" min="0" max="100" value="70">
                             <span id="master-level" style="font-size: 12px; opacity: 0.8;">70%</span>
                         </div>
                         <div style="display: flex; gap: 15px; margin-top: 15px; justify-content: center;">
-                            <div class="orb-control" id="mixdown-tracks">💾</div>
-                            <div class="orb-control" id="master-effects">🎛️</div>
+                            <div class="orb-control" id="mixdown-tracks">ðŸ’¾</div>
+                            <div class="orb-control" id="master-effects">ðŸŽ›ï¸</div>
                         </div>
                     </div>
                     <div style="background: rgba(0,0,0,0.4); border-radius: 15px; padding: 20px; margin-top: 15px;">
-                        <div class="panel-title">🎵 Master Effects</div>
+                        <div class="panel-title">ðŸŽµ Master Effects</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div class="control-strip">
                                 <label>Reverb</label>
@@ -606,27 +652,27 @@
 
         <!-- Right Panel: Context Tools -->
         <aside class="neural-panel">
-            <div class="panel-title">📦 Sample Matrix</div>
+            <div class="panel-title">ðŸ“¦ Sample Matrix</div>
             <div class="neural-grid" id="sample-bank" style="grid-template-columns: repeat(2, 1fr);">
                 <!-- Sample bank slots generated by JS -->
             </div>
             <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-                <div class="orb-control" id="import-samples" style="width: 35px; height: 35px; font-size: 14px;">📂</div>
-                <div class="orb-control" id="clear-samples" style="width: 35px; height: 35px; font-size: 14px;">🗑️</div>
+                <div class="orb-control" id="import-samples" style="width: 35px; height: 35px; font-size: 14px;">ðŸ“‚</div>
+                <div class="orb-control" id="clear-samples" style="width: 35px; height: 35px; font-size: 14px;">ðŸ—‘ï¸</div>
             </div>
             
             <div style="margin-top: 30px;">
-                <div class="panel-title">🎹 MIDI Hub</div>
+                <div class="panel-title">ðŸŽ¹ MIDI Hub</div>
                 <div style="text-align: center;">
-                    <div class="orb-control" id="midi-connect">🎹</div>
+                    <div class="orb-control" id="midi-connect">ðŸŽ¹</div>
                     <p style="font-size: 11px; opacity: 0.7; margin-top: 8px;">Connect Controller</p>
                 </div>
             </div>
             
             <div style="margin-top: 30px;">
-                <div class="panel-title">🤖 AI Neural Net</div>
+                <div class="panel-title">ðŸ¤– AI Neural Net</div>
                 <div style="text-align: center;">
-                    <div class="orb-control" id="ai-assistant">✨</div>
+                    <div class="orb-control" id="ai-assistant">âœ¨</div>
                     <p style="font-size: 11px; opacity: 0.7; margin-top: 8px;">Smart Tools</p>
                 </div>
             </div>
@@ -634,16 +680,16 @@
 
         <!-- Floating Transport Controls -->
         <footer class="floating-transport">
-            <div class="orb-control" id="play-all">▶️</div>
-            <div class="orb-control" id="stop-all">⏹️</div>
-            <div class="orb-control" id="record-mode">🔴</div>
-            <div class="orb-control" id="metronome">🥁</div>
+            <div class="orb-control" id="play-all">â–¶ï¸</div>
+            <div class="orb-control" id="stop-all">â¹ï¸</div>
+            <div class="orb-control" id="record-mode">ðŸ”´</div>
+            <div class="orb-control" id="metronome">ðŸ¥</div>
             <div style="margin: 0 20px; font-size: 12px; opacity: 0.7;">
                 <div id="time-display">00:00:00</div>
                 <div id="cpu-load">CPU: 0%</div>
             </div>
-            <div class="orb-control" id="save-project">💾</div>
-            <div class="orb-control" id="load-project">📁</div>
+            <div class="orb-control" id="save-project">ðŸ’¾</div>
+            <div class="orb-control" id="load-project">ðŸ“</div>
         </footer>
     </div>
 
@@ -667,7 +713,7 @@
 
         // Load all optional modules
         async function loadOptionalModules() {
-          console.log('🧠 Loading Neural Enhancement Modules...');
+          console.log('ðŸ§  Loading Neural Enhancement Modules...');
           
           const modulePromises = [];
           
@@ -678,7 +724,7 @@
               showMIDIMappingUI = midi.showMIDIMappingUI;
               exportMIDIMappings = midi.exportMIDIMappings;
               importMIDIMappings = midi.importMIDIMappings;
-              console.log('✅ MIDI module loaded');
+              console.log('âœ… MIDI module loaded');
             }).catch(e => {
               console.warn('MIDI module not available:', e.message);
             })
@@ -693,7 +739,7 @@
               applyPresetToMaster = effects.applyPresetToMaster;
               ensureTrackEffects = effects.ensureTrackEffects;
               copyMasterToTrack = effects.copyMasterToTrack;
-              console.log('✅ Effects module loaded');
+              console.log('âœ… Effects module loaded');
             }).catch(e => {
               console.warn('Effects module not available:', e.message);
             })
@@ -708,7 +754,7 @@
               getAllProjects = storage.getAllProjects;
               saveSetting = storage.saveSetting;
               loadSetting = storage.loadSetting;
-              console.log('✅ Storage module loaded');
+              console.log('âœ… Storage module loaded');
             }).catch(e => {
               console.warn('Storage module not available:', e.message);
             })
@@ -720,7 +766,7 @@
               BeatDetector = beatModule.BeatDetector;
               detectBPM = beatModule.detectBPM;
               getSlicePointsFromBeats = beatModule.getSlicePointsFromBeats;
-              console.log('✅ Beat detection module loaded');
+              console.log('âœ… Beat detection module loaded');
             }).catch(e => {
               console.warn('Beat detection module not available:', e.message);
             })
@@ -735,7 +781,7 @@
               hasApiKey = aiModule.hasApiKey;
               generateSample = aiModule.generateSample;
               separateStems = aiModule.separateStems;
-              console.log('✅ AI features module loaded');
+              console.log('âœ… AI features module loaded');
             }).catch(e => {
               console.warn('AI features module not available:', e.message);
             })
@@ -749,7 +795,7 @@
                 setTimeout(() => reject(new Error('Module loading timeout')), 5000)
               )
             ]);
-            console.log('✅ Module loading completed');
+            console.log('âœ… Module loading completed');
           } catch (error) {
             console.warn('Module loading timed out, continuing with available modules');
           }
@@ -779,6 +825,10 @@
                 this.overdubMode = false;
                 this.loopBuffer = null;
                 
+                // Add loading states to prevent race conditions
+                this.isLoadingChopper = false;
+                this.isDrawingWaveform = false;
+                
                 this.init();
             }
             
@@ -789,7 +839,7 @@
                 this.setupWorkflowSwitching();
                 
                 // Initialize audio engine with multiple trigger events
-                console.log('🎵 Setting up audio initialization triggers...');
+                console.log('ðŸŽµ Setting up audio initialization triggers...');
                 const initTrigger = this.initializeAudio.bind(this);
                 
                 document.addEventListener('click', initTrigger, { once: true });
@@ -800,13 +850,20 @@
                 const overlay = document.getElementById('loading-overlay');
                 if (overlay) {
                     overlay.addEventListener('click', initTrigger, { once: true });
-                    console.log('✅ Click triggers setup on overlay');
+                    console.log('âœ… Click triggers setup on overlay');
                 } else {
-                    console.warn('⚠️ Loading overlay not found');
+                    console.warn('âš ï¸ Loading overlay not found');
                 }
             }
             
             async initializeAudio() {
+                // Prevent multiple simultaneous initializations
+                if (this.audioInitializing || this.audioInitialized) {
+                    console.log('🎵 Audio initialization already in progress or completed');
+                    return;
+                }
+                
+                this.audioInitializing = true;
                 console.log('🎵 Audio initialization triggered!');
                 const overlay = document.getElementById('loading-overlay');
                 
@@ -815,12 +872,12 @@
                     if (overlay) {
                         overlay.style.display = 'flex';
                         overlay.style.opacity = '1';
-                        console.log('✅ Loading overlay shown');
+                        console.log('âœ… Loading overlay shown');
                     } else {
-                        console.error('❌ Loading overlay element not found!');
+                        console.error('âŒ Loading overlay element not found!');
                     }
                     
-                    console.log('🎵 Starting neural audio initialization...');
+                    console.log('ðŸŽµ Starting neural audio initialization...');
                     
                     // Load modules in background (non-blocking)
                     const modulePromise = loadOptionalModules().catch(e => {
@@ -832,9 +889,9 @@
                     try {
                         this.engine = new UnifiedAudioEngine();
                         window.engine = this.engine;
-                        console.log('✅ UnifiedAudioEngine created');
+                        console.log('âœ… UnifiedAudioEngine created');
                     } catch (error) {
-                        console.warn('❌ UnifiedAudioEngine failed, using fallback:', error);
+                        console.warn('âŒ UnifiedAudioEngine failed, using fallback:', error);
                         // Fallback: create basic engine object
                         this.engine = {
                             context: new (window.AudioContext || window.webkitAudioContext)(),
@@ -842,7 +899,7 @@
                             sampleBank: new Map(),
                             tracks: []
                         };
-                        console.log('✅ Fallback engine created');
+                        console.log('âœ… Fallback engine created');
                     }
                     
                     // Initialize engine with timeout to prevent hanging
@@ -854,12 +911,12 @@
                     ]);
                     
                     await initPromise;
-                    console.log('✅ Audio engine core initialized');
+                    console.log('âœ… Audio engine core initialized');
                     
                     // Start basic audio context
                     try {
                         await ensureAudioContextRunning();
-                        console.log('✅ Audio context running');
+                        console.log('âœ… Audio context running');
                     } catch (e) {
                         console.warn('Audio context issue:', e);
                         // Continue anyway - some features may still work
@@ -867,19 +924,25 @@
                     
                     // Hide loading overlay early - audio is functional now
                     if (overlay) {
-                        console.log('✅ Hiding loading overlay');
+                        console.log('âœ… Hiding loading overlay');
                         overlay.style.opacity = '0';
                         overlay.style.transform = 'scale(0.9)';
                         setTimeout(() => {
                             overlay.style.display = 'none';
-                            console.log('✅ Loading overlay hidden');
+                            console.log('âœ… Loading overlay hidden');
                         }, 500);
                     } else {
-                        console.warn('⚠️ Could not find overlay to hide');
+                        console.warn('âš ï¸ Could not find overlay to hide');
                     }
                     
                     this.updateStatus('audio', true);
-                    this.startVisualization();
+                    
+                    // Start visualizations with a small delay to ensure canvas is ready
+                    setTimeout(() => {
+                        this.startVisualization();
+                        this.initPerformanceWorkflow(); // Ensure performance mode is fully initialized
+                    }, 100);
+                    
                     console.log('🎵 Basic audio system ready');
                     
                     // Complete initialization in background
@@ -899,7 +962,7 @@
                     // Try to initialize basic functionality anyway
                     try {
                         if (!this.engine) {
-                            console.log('🔄 Creating fallback engine');
+                            console.log('ðŸ”„ Creating fallback engine');
                             this.engine = {
                                 context: new (window.AudioContext || window.webkitAudioContext)(),
                                 chopper: { buffer: null, filename: '', slices: [] },
@@ -909,9 +972,9 @@
                         }
                         window.engine = this.engine;
                         this.startVisualization();
-                        console.log('✅ Fallback initialization complete');
+                        console.log('âœ… Fallback initialization complete');
                     } catch (e) {
-                        console.error('❌ Fallback initialization failed:', e);
+                        console.error('âŒ Fallback initialization failed:', e);
                     }
                 }
             }
@@ -924,7 +987,7 @@
                     // Initialize database if available (non-blocking)
                     if (initDB) {
                         initDB().then(() => {
-                            console.log('✅ Database initialized');
+                            console.log('âœ… Database initialized');
                         }).catch(e => {
                             console.warn('Database init failed:', e);
                         });
@@ -932,14 +995,14 @@
                     
                     // Setup recording capabilities (non-blocking, on-demand)
                     // Don't request microphone access until user tries to record
-                    console.log('✅ Recording system ready (microphone access on-demand)');
+                    console.log('âœ… Recording system ready (microphone access on-demand)');
                     
                     // Initialize engine subsystems
                     setTimeout(() => {
                         try {
                             this.initializeEngineSubsystems();
                             this.bindExistingFunctionality();
-                            console.log('✅ All systems initialized');
+                            console.log('âœ… All systems initialized');
                         } catch (e) {
                             console.warn('Subsystem initialization failed:', e);
                         }
@@ -953,7 +1016,7 @@
             initializeEngineSubsystems() {
                 // Ensure basic engine structure exists
                 if (!this.engine) {
-                    console.error('❌ Engine not available for subsystem initialization');
+                    console.error('âŒ Engine not available for subsystem initialization');
                     return;
                 }
                 
@@ -961,9 +1024,9 @@
                 if (!this.engine.context) {
                     try {
                         this.engine.context = new (window.AudioContext || window.webkitAudioContext)();
-                        console.log('✅ Audio context created for engine');
+                        console.log('âœ… Audio context created for engine');
                     } catch (error) {
-                        console.error('❌ Failed to create audio context:', error);
+                        console.error('âŒ Failed to create audio context:', error);
                         return;
                     }
                 }
@@ -975,13 +1038,13 @@
                         filename: '',
                         slices: []
                     };
-                    console.log('✅ Chopper object initialized');
+                    console.log('âœ… Chopper object initialized');
                 }
                 
                 // Initialize sample bank
                 if (!this.engine.sampleBank) {
                     this.engine.sampleBank = new Map();
-                    console.log('✅ Sample bank initialized');
+                    console.log('âœ… Sample bank initialized');
                 }
                 
                 // Initialize existing subsystems like app.js does
@@ -993,7 +1056,7 @@
                 this.engine.renderTracks?.();
                 this.engine.renderSequencer?.();
                 
-                console.log('✅ Engine subsystems initialized');
+                console.log('âœ… Engine subsystems initialized');
             }
             
             bindExistingFunctionality() {
@@ -1016,7 +1079,7 @@
             setupChopperIntegration() {
                 // Connect load sample button to file input
                 document.getElementById('load-sample')?.addEventListener('click', () => {
-                    console.log('🔪 Load sample button clicked');
+                    console.log('ðŸ”ª Load sample button clicked');
                     
                     // Debug: Check engine state
                     console.log('Engine state check:', {
@@ -1028,11 +1091,11 @@
                     
                     const input = document.getElementById('chop-file-input');
                     if (input) {
-                        console.log('✅ Found chop file input, opening dialog');
+                        console.log('âœ… Found chop file input, opening dialog');
                         input.click();
                         this.showMessage('Select audio file for chopping...', 'info');
                     } else {
-                        console.error('❌ Chop file input not found');
+                        console.error('âŒ Chop file input not found');
                         this.showError('File input not found');
                     }
                 });
@@ -1040,34 +1103,34 @@
                 // Handle file selection for chopper
                 const chopInput = document.getElementById('chop-file-input');
                 if (chopInput) {
-                    console.log('✅ Setting up chop file input handler');
+                    console.log('âœ… Setting up chop file input handler');
                     chopInput.onchange = async (e) => {
-                        console.log('📁 File selected for chopper');
+                        console.log('ðŸ“ File selected for chopper');
                         const file = e.target.files[0];
                         if (file) {
-                            console.log(`📁 Selected file: ${file.name} (${file.type}, ${file.size} bytes)`);
+                            console.log(`ðŸ“ Selected file: ${file.name} (${file.type}, ${file.size} bytes)`);
                             await this.loadFileToChopper(file);
                             // Clear the input so the same file can be selected again
                             e.target.value = '';
                         } else {
-                            console.log('❌ No file selected');
+                            console.log('âŒ No file selected');
                         }
                     };
                 } else {
-                    console.error('❌ Chop file input element not found');
+                    console.error('âŒ Chop file input element not found');
                 }
                 
                 // Auto slice button
                 document.getElementById('auto-slice')?.addEventListener('click', () => {
-                        console.log('⚡ Auto slice button clicked');
+                        console.log('âš¡ Auto slice button clicked');
                         
                         if (!this.engine?.chopper?.buffer) {
-                            console.log('❌ No audio buffer in chopper');
+                            console.log('âŒ No audio buffer in chopper');
                             this.showError('No audio loaded in chopper. Load a file first.');
                             return;
                         }
                         
-                        console.log('✅ Audio buffer found, creating slices');
+                        console.log('âœ… Audio buffer found, creating slices');
                         
                         if (this.engine?.createEqualSlices) {
                             this.engine.createEqualSlices();
@@ -1075,17 +1138,23 @@
                             this.updatePadLabels();
                         } else {
                             // Fallback: create basic equal slices
-                            console.log('📦 Using fallback slice creation');
+                            console.log('ðŸ“¦ Using fallback slice creation');
                             this.createBasicSlices();
                             this.showMessage('Created 8 equal slices', 'success');
                         }
                         
+                        // Refresh waveform and pads after slicing (async to prevent freezing)
+                        this.drawChopWaveformAsync().then(() => {
+                            this.initializeSlicePads();
+                            console.log('✅ Auto-slice complete');
+                        });
+                        
                         // Debug: log slice info
                         if (this.engine.chopper?.slices) {
-                            console.log(`🔪 Created ${this.engine.chopper.slices.length} slices:`, 
-                                       this.engine.chopper.slices.map(s => `${s.start.toFixed(2)}-${s.end.toFixed(2)}s`));
+                            console.log('Created ' + this.engine.chopper.slices.length + ' slices');
+                        }
+                });
                 
-                // Manual slice mode
                 document.getElementById('manual-slice')?.addEventListener('click', () => {
                     if (this.engine?.toggleManualMode && this.engine?.chopper?.buffer) {
                         this.engine.toggleManualMode();
@@ -1112,6 +1181,8 @@
                                 // Apply beat-based slicing
                                 this.engine.chopper.sliceMarkers = beats;
                                 this.engine.createSlicesFromMarkers?.();
+                                await this.drawChopWaveformAsync();
+                                this.initializeSlicePads();
                                 this.showMessage(`AI detected ${beats.length} beat points`, 'success');
                             } else {
                                 this.showMessage('No clear beats detected', 'error');
@@ -1123,11 +1194,26 @@
                     } else if (this.engine?.detectTransients) {
                         // Fallback to built-in transient detection
                         this.engine.detectTransients();
+                        await this.drawChopWaveformAsync();
+                        this.initializeSlicePads();
                         this.showMessage('Analyzing audio for slice points...', 'info');
                     } else {
                         // Basic fallback - create slices based on audio peaks
                         this.createBasicSlices();
+                        await this.drawChopWaveformAsync();
+                        this.initializeSlicePads();
                         this.showMessage('AI features not available. Created basic slices.', 'info');
+                    }
+                });
+                
+                // Manual waveform redraw button handler (for debugging)
+                document.getElementById('redraw-waveform')?.addEventListener('click', async () => {
+                    console.log('🎨 Manual waveform redraw requested');
+                    if (this.engine?.chopper?.buffer) {
+                        await this.drawChopWaveformAsync();
+                        this.showMessage('Waveform redrawn', 'success');
+                    } else {
+                        this.showError('No audio loaded to redraw');
                     }
                 });
             }
@@ -1314,7 +1400,7 @@
             
             async setupRecording() {
                 try {
-                    console.log('🎤 Requesting microphone access...');
+                    console.log('ðŸŽ¤ Requesting microphone access...');
                     
                     // Request microphone access
                     this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
@@ -1337,7 +1423,7 @@
                     this.inputGainNode.connect(this.monitorGainNode);
                     this.monitorGainNode.connect(this.engine.masterGainNode || this.engine.context.destination);
                     
-                    console.log('🎤 Recording setup complete');
+                    console.log('ðŸŽ¤ Recording setup complete');
                     this.updateStatus('record', true);
                     this.showMessage('Microphone access granted!', 'success');
                     
@@ -1437,14 +1523,14 @@
                     // Update UI
                     const recordButton = document.getElementById('record-mode');
                     recordButton.classList.add('active');
-                    recordButton.textContent = '⏸️';
+                    recordButton.textContent = 'â¸ï¸';
                     
                     const recordArmButton = document.getElementById('record-arm');
                     if (recordArmButton) {
                         recordArmButton.classList.add('active');
                     }
                     
-                    console.log('🔴 Recording started');
+                    console.log('ðŸ”´ Recording started');
                     this.showMessage('Recording...', 'info');
                     
                     // Update transport display
@@ -1464,14 +1550,14 @@
                     // Update UI
                     const recordButton = document.getElementById('record-mode');
                     recordButton.classList.remove('active');
-                    recordButton.textContent = '🔴';
+                    recordButton.textContent = 'ðŸ”´';
                     
                     const recordArmButton = document.getElementById('record-arm');
                     if (recordArmButton) {
                         recordArmButton.classList.remove('active');
                     }
                     
-                    console.log('⏹️ Recording stopped');
+                    console.log('â¹ï¸ Recording stopped');
                     this.showMessage('Recording saved!', 'success');
                     
                     this.stopRecordingTimer();
@@ -1504,7 +1590,7 @@
                 if (this.engine.tracks && this.engine.tracks[trackIndex]) {
                     this.engine.tracks[trackIndex].buffer = audioBuffer;
                     this.engine.tracks[trackIndex].name = `Recording ${new Date().toLocaleTimeString()}`;
-                    console.log(`📁 Recording added to Track ${trackIndex + 1}`);
+                    console.log(`ðŸ“ Recording added to Track ${trackIndex + 1}`);
                 } else {
                     // Fallback: add to sample bank
                     const sampleIndex = this.findAvailableSampleSlot();
@@ -1514,7 +1600,7 @@
                             name: `Recording ${new Date().toLocaleTimeString()}`,
                             duration: audioBuffer.duration
                         });
-                        console.log(`📁 Recording added to Sample Bank slot ${sampleIndex + 1}`);
+                        console.log(`ðŸ“ Recording added to Sample Bank slot ${sampleIndex + 1}`);
                         this.updateSampleBankUI();
                     }
                 }
@@ -1541,7 +1627,7 @@
                 if (button) {
                     button.classList.toggle('active', this.recordArmed);
                 }
-                console.log(`🎤 Record arm: ${this.recordArmed ? 'ON' : 'OFF'}`);
+                console.log(`ðŸŽ¤ Record arm: ${this.recordArmed ? 'ON' : 'OFF'}`);
             }
             
             toggleMonitoring() {
@@ -1556,7 +1642,7 @@
                     button.classList.toggle('active', this.isMonitoring);
                 }
                 
-                console.log(`🎧 Input monitoring: ${this.isMonitoring ? 'ON' : 'OFF'}`);
+                console.log(`ðŸŽ§ Input monitoring: ${this.isMonitoring ? 'ON' : 'OFF'}`);
             }
             
             toggleOverdubMode() {
@@ -1564,7 +1650,7 @@
                 const button = document.getElementById('overdub-mode');
                 if (button) {
                     button.classList.toggle('active', this.overdubMode);
-                    button.textContent = this.overdubMode ? '🔄' : '🎵';
+                    button.textContent = this.overdubMode ? 'ðŸ”„' : 'ðŸŽµ';
                 }
                 
                 if (this.overdubMode) {
@@ -1573,7 +1659,7 @@
                     this.showMessage('Overdub mode disabled', 'info');
                 }
                 
-                console.log(`🔄 Overdub mode: ${this.overdubMode ? 'ON' : 'OFF'}`);
+                console.log(`ðŸ”„ Overdub mode: ${this.overdubMode ? 'ON' : 'OFF'}`);
             }
             
             setupLoopControls() {
@@ -1583,11 +1669,11 @@
                     const loopControls = document.createElement('div');
                     loopControls.innerHTML = `
                         <div style="background: rgba(0,0,0,0.4); border-radius: 15px; padding: 15px; margin-top: 15px;">
-                            <div class="panel-title">🔄 Loop Recording</div>
+                            <div class="panel-title">ðŸ”„ Loop Recording</div>
                             <div style="display: flex; gap: 10px; margin: 10px 0;">
-                                <div class="orb-control" id="loop-record" title="Start loop recording">🔄</div>
-                                <div class="orb-control" id="loop-clear" title="Clear loop">🗑️</div>
-                                <div class="orb-control" id="loop-export" title="Export loop">💾</div>
+                                <div class="orb-control" id="loop-record" title="Start loop recording">ðŸ”„</div>
+                                <div class="orb-control" id="loop-clear" title="Clear loop">ðŸ—‘ï¸</div>
+                                <div class="orb-control" id="loop-export" title="Export loop">ðŸ’¾</div>
                             </div>
                             <div class="control-strip">
                                 <label>Loop Length (beats)</label>
@@ -1728,7 +1814,7 @@
                 this.loopPlayer.connect(this.engine.masterGain);
                 this.loopPlayer.start();
                 
-                console.log('🔄 Loop playback started');
+                console.log('ðŸ”„ Loop playback started');
             }
             
             stopLoop() {
@@ -1751,7 +1837,7 @@
                 button?.classList.remove('active');
                 
                 this.showMessage('Loop cleared', 'info');
-                console.log('🗑️ Loop cleared');
+                console.log('ðŸ—‘ï¸ Loop cleared');
             }
             
             exportLoop() {
@@ -1804,7 +1890,7 @@
                         break;
                 }
                 
-                console.log(`🎧 Applied ${effectType}: ${Math.round(value * 100)}%`);
+                console.log(`ðŸŽ§ Applied ${effectType}: ${Math.round(value * 100)}%`);
             }
             
             applyMasterEffect(effectType, value) {
@@ -1928,7 +2014,7 @@
             }
             
             showError(text) {
-                this.showMessage(`⚠️ ${text}`, 'error');
+                this.showMessage(`âš ï¸ ${text}`, 'error');
             }
             
             setupKeyboardMapping() {
@@ -2044,14 +2130,14 @@
                 const mode = this.padMode;
                 
                 const icons = {
-                    slices: '🔪',
-                    samples: '🎵',
-                    loops: '🔄', 
-                    tracks: '🎛️'
+                    slices: 'ðŸ”ª',
+                    samples: 'ðŸŽµ',
+                    loops: 'ðŸ”„', 
+                    tracks: 'ðŸŽ›ï¸'
                 };
                 
                 if (button) {
-                    button.textContent = icons[mode] || '🎵';
+                    button.textContent = icons[mode] || 'ðŸŽµ';
                     button.title = `Current mode: ${mode}`;
                 }
                 
@@ -2126,7 +2212,8 @@
             }
             
             initPerformanceWorkflow() {
-                this.startVisualization();
+                // Always restart visualization to ensure it's running
+                setTimeout(() => this.startVisualization(), 50);
                 this.generatePerformanceTracks();
             }
             
@@ -2136,6 +2223,205 @@
             
             initChopWorkflow() {
                 this.initializeSlicePads();
+                this.drawChopWaveform();
+            }
+            
+            initializeSlicePads() {
+                const container = document.getElementById('slice-pads');
+                if (!container) return;
+                container.innerHTML = '';
+                
+                const sliceCount = this.engine?.chopper?.slices?.length || 8;
+                for (let i = 0; i < Math.min(sliceCount, 16); i++) {
+                    const pad = document.createElement('div');
+                    pad.className = 'neural-pad';
+                    const hasSlice = this.engine?.chopper?.slices?.[i];
+                    const duration = hasSlice ? (hasSlice.end - hasSlice.start).toFixed(1) + 's' : 'Empty';
+                    pad.innerHTML = `<div style="font-size: 16px; font-weight: bold;">${i + 1}</div><div style="font-size: 10px; opacity: 0.7;">${duration}</div>`;
+                    pad.onclick = () => {
+                        pad.classList.add('active');
+                        setTimeout(() => pad.classList.remove('active'), 200);
+                        if (this.engine?.playSlice && this.engine.chopper?.slices?.[i]) {
+                            this.engine.playSlice(i);
+                        } else if (this.engine?.chopper?.slices?.[i]) {
+                            this.playSliceFallback(i);
+                        } else {
+                            this.showMessage(`Slice ${i + 1} not available`, 'error');
+                        }
+                    };
+                    container.appendChild(pad);
+                }
+            }
+            
+            drawChopWaveform() {
+                console.log('🎨 Drawing futuristic chopper waveform...');
+                const canvas = document.getElementById('chop-waveform');
+                if (!canvas) {
+                    console.error('❌ Chop waveform canvas not found');
+                    return;
+                }
+                
+                if (!this.engine?.chopper?.buffer) {
+                    console.error('❌ No audio buffer in chopper');
+                    return;
+                }
+                
+                // Force canvas sizing with hi-DPI support
+                const containerWidth = canvas.offsetWidth || 800;
+                const containerHeight = canvas.offsetHeight || 200;
+                const scale = window.devicePixelRatio || 2;
+                const width = canvas.width = containerWidth * scale;
+                const height = canvas.height = containerHeight * scale;
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = containerHeight + 'px';
+                
+                console.log(`🎨 Canvas size: ${width}x${height}px (${containerWidth}x${containerHeight} display)`);
+                
+                const ctx = canvas.getContext('2d');
+                ctx.scale(scale, scale);
+                
+                // Clear canvas with cyberpunk background
+                ctx.clearRect(0, 0, containerWidth, containerHeight);
+                const gradient = ctx.createLinearGradient(0, 0, 0, containerHeight);
+                gradient.addColorStop(0, '#000615');
+                gradient.addColorStop(0.5, '#001133');
+                gradient.addColorStop(1, '#000615');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
+                
+                const buffer = this.engine.chopper.buffer;
+                const data = buffer.getChannelData(0);
+                const step = Math.max(1, Math.ceil(data.length / containerWidth));
+                const amp = containerHeight / 2;
+                const centerY = containerHeight / 2;
+                
+                console.log(`🎵 Buffer: ${buffer.duration.toFixed(2)}s, ${data.length} samples, step: ${step}`);
+                
+                // Create futuristic waveform gradient
+                const waveGradient = ctx.createLinearGradient(0, 0, containerWidth, 0);
+                waveGradient.addColorStop(0, '#00ffff');
+                waveGradient.addColorStop(0.3, '#0088ff');
+                waveGradient.addColorStop(0.7, '#ff0088');
+                waveGradient.addColorStop(1, '#ff00ff');
+                
+                // Draw glow effect for waveform
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 8;
+                ctx.strokeStyle = waveGradient;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                for (let i = 0; i < containerWidth; i++) {
+                    let min = 1.0, max = -1.0;
+                    for (let j = 0; j < step; j++) {
+                        const idx = (i * step) + j;
+                        if (idx >= data.length) break;
+                        if (data[idx] < min) min = data[idx];
+                        if (data[idx] > max) max = data[idx];
+                    }
+                    
+                    const y1 = centerY + (min * amp * 0.8);
+                    const y2 = centerY + (max * amp * 0.8);
+                    
+                    ctx.moveTo(i, y1);
+                    ctx.lineTo(i, y2);
+                }
+                ctx.stroke();
+                
+                // Draw center line
+                ctx.shadowBlur = 2;
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(containerWidth, centerY);
+                ctx.stroke();
+                
+                console.log('✅ Futuristic waveform drawn');
+                
+                // Draw slice markers with neon effect
+                const slices = this.engine.chopper.slices;
+                if (slices && slices.length > 0) {
+                    const duration = buffer.duration;
+                    
+                    slices.forEach((slice, index) => {
+                        if (index === 0) return; // Skip first marker at 0
+                        const x = (slice.start / duration) * containerWidth;
+                        
+                        // Bright neon slice line with glow
+                        ctx.shadowColor = '#ff00ff';
+                        ctx.shadowBlur = 15;
+                        ctx.strokeStyle = '#ff00ff';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, containerHeight);
+                        ctx.stroke();
+                        
+                        // Inner bright line
+                        ctx.shadowBlur = 5;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, containerHeight);
+                        ctx.stroke();
+                        
+                        // Cyberpunk slice labels
+                        ctx.shadowBlur = 0;
+                        const label = (index + 1).toString();
+                        const labelWidth = 24;
+                        const labelHeight = 16;
+                        
+                        // Label background with gradient
+                        const labelGradient = ctx.createLinearGradient(x, 0, x + labelWidth, labelHeight);
+                        labelGradient.addColorStop(0, 'rgba(255, 0, 255, 0.8)');
+                        labelGradient.addColorStop(1, 'rgba(0, 255, 255, 0.8)');
+                        ctx.fillStyle = labelGradient;
+                        ctx.fillRect(x + 2, 2, labelWidth, labelHeight);
+                        
+                        // Label border glow
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x + 2, 2, labelWidth, labelHeight);
+                        
+                        // Label text
+                        ctx.fillStyle = '#000000';
+                        ctx.font = 'bold 12px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(label, x + 2 + labelWidth/2, 14);
+                    });
+                    
+                    console.log(`🔪 Drew ${slices.length - 1} futuristic slice markers`);
+                } else {
+                    console.log('ℹ️ No slices to draw');
+                }
+                
+                // Reset shadow
+                ctx.shadowBlur = 0;
+                console.log('✅ Futuristic chopper waveform complete');
+            }
+            
+            // Async version of waveform drawing to prevent UI freezing
+            async drawChopWaveformAsync() {
+                return new Promise((resolve) => {
+                    // Use requestAnimationFrame to prevent blocking the main thread
+                    requestAnimationFrame(() => {
+                        if (this.isDrawingWaveform) {
+                            // Skip if already drawing to prevent conflicts
+                            resolve();
+                            return;
+                        }
+                        
+                        this.isDrawingWaveform = true;
+                        try {
+                            this.drawChopWaveform();
+                        } finally {
+                            this.isDrawingWaveform = false;
+                        }
+                        resolve();
+                    });
+                });
             }
             
             initMixWorkflow() {
@@ -2152,9 +2438,9 @@
                     track.innerHTML = `
                         <div class="track-title">Track ${i + 1}</div>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <div class="orb-control" style="width: 30px; height: 30px; font-size: 12px;">▶️</div>
+                            <div class="orb-control" style="width: 30px; height: 30px; font-size: 12px;">â–¶ï¸</div>
                             <input type="range" min="0" max="100" value="70" style="flex: 1;">
-                            <div class="orb-control" style="width: 30px; height: 30px; font-size: 12px;">🔇</div>
+                            <div class="orb-control" style="width: 30px; height: 30px; font-size: 12px;">ðŸ”‡</div>
                         </div>
                     `;
                     container.appendChild(track);
@@ -2163,31 +2449,118 @@
             
             startVisualization() {
                 const canvas = document.getElementById('performance-visualizer');
-                if (!canvas) return;
+                if (!canvas) {
+                    console.warn('⚠️ Performance visualizer canvas not found');
+                    return;
+                }
                 
+                // Ensure canvas is visible and properly sized
+                if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+                    console.warn('⚠️ Canvas not ready, retrying visualization in 200ms...');
+                    setTimeout(() => this.startVisualization(), 200);
+                    return;
+                }
+                
+                console.log('🎨 Starting beautiful wave visualization...');
+                
+                // Hi-DPI canvas setup
                 const ctx = canvas.getContext('2d');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
+                const scale = window.devicePixelRatio || 2;
+                const width = canvas.width = canvas.offsetWidth * scale;
+                const height = canvas.height = canvas.offsetHeight * scale;
+                canvas.style.width = canvas.offsetWidth + 'px';
+                canvas.style.height = canvas.offsetHeight + 'px';
+                ctx.scale(scale, scale);
+                
+                const containerWidth = canvas.offsetWidth;
+                const containerHeight = canvas.offsetHeight;
                 
                 const animate = () => {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    // Cyberpunk background with gradient
+                    ctx.clearRect(0, 0, containerWidth, containerHeight);
+                    const gradient = ctx.createLinearGradient(0, 0, 0, containerHeight);
+                    gradient.addColorStop(0, '#000615');
+                    gradient.addColorStop(0.5, '#001133');
+                    gradient.addColorStop(1, '#000615');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, containerWidth, containerHeight);
                     
-                    // Simple waveform visualization
-                    ctx.strokeStyle = '#00ffff';
-                    ctx.lineWidth = 2;
+                    // Create futuristic waveform gradient
+                    const waveGradient = ctx.createLinearGradient(0, 0, containerWidth, 0);
+                    waveGradient.addColorStop(0, '#00ffff');
+                    waveGradient.addColorStop(0.3, '#0088ff');
+                    waveGradient.addColorStop(0.7, '#ff0088');
+                    waveGradient.addColorStop(1, '#ff00ff');
+                    
+                    // Main waveform with glow
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 12;
+                    ctx.strokeStyle = waveGradient;
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
                     
-                    for (let i = 0; i < canvas.width; i += 4) {
-                        const y = canvas.height / 2 + Math.sin((i + Date.now() * 0.01) * 0.02) * 30;
+                    const time = Date.now() * 0.008;
+                    const centerY = containerHeight / 2;
+                    
+                    for (let i = 0; i < containerWidth; i += 2) {
+                        // Complex waveform with multiple frequencies
+                        const baseWave = Math.sin((i * 0.02) + time) * 40;
+                        const harmonic = Math.sin((i * 0.05) + time * 1.5) * 15;
+                        const noise = (Math.random() - 0.5) * 8;
+                        const y = centerY + baseWave + harmonic + noise;
+                        
                         if (i === 0) ctx.moveTo(i, y);
                         else ctx.lineTo(i, y);
                     }
-                    
                     ctx.stroke();
+                    
+                    // Secondary animated wave
+                    ctx.shadowBlur = 8;
+                    ctx.strokeStyle = 'rgba(255, 0, 255, 0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < containerWidth; i += 3) {
+                        const y = centerY + Math.sin((i * 0.03) + time * 2) * 25;
+                        if (i === 0) ctx.moveTo(i, y);
+                        else ctx.lineTo(i, y);
+                    }
+                    ctx.stroke();
+                    
+                    // Frequency spectrum bars
+                    ctx.shadowBlur = 4;
+                    const barWidth = containerWidth / 32;
+                    for (let i = 0; i < 32; i++) {
+                        const x = i * barWidth;
+                        const intensity = Math.abs(Math.sin((i * 0.5) + time)) * 0.8 + 0.2;
+                        const barHeight = intensity * (containerHeight * 0.3);
+                        
+                        // Gradient for each bar
+                        const barGradient = ctx.createLinearGradient(x, containerHeight, x, containerHeight - barHeight);
+                        barGradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+                        barGradient.addColorStop(0.5, 'rgba(0, 136, 255, 0.6)');
+                        barGradient.addColorStop(1, 'rgba(255, 0, 136, 0.4)');
+                        
+                        ctx.fillStyle = barGradient;
+                        ctx.fillRect(x, containerHeight - barHeight, barWidth * 0.8, barHeight);
+                    }
+                    
+                    // Center line
+                    ctx.shadowBlur = 2;
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(0, centerY);
+                    ctx.lineTo(containerWidth, centerY);
+                    ctx.stroke();
+                    
+                    // Reset shadow
+                    ctx.shadowBlur = 0;
+                    
                     requestAnimationFrame(animate);
                 };
                 
+                console.log('✨ Wave visualization started successfully!');
                 animate();
             }
             
@@ -2310,35 +2683,46 @@
             }
             
             async loadFileToChopper(file) {
+                // Prevent multiple simultaneous loads
+                if (this.isLoadingChopper) {
+                    console.warn('⚠️ Already loading a file, please wait...');
+                    this.showMessage('Already loading a file, please wait...', 'info');
+                    return;
+                }
+                
+                this.isLoadingChopper = true;
+                const loadButton = document.getElementById('load-sample');
+                if (loadButton) loadButton.style.opacity = '0.5';
+                
                 try {
                     this.showMessage(`Loading ${file.name}...`, 'info');
-                    console.log('🔪 Loading file to chopper:', file.name);
+                    console.log('ðŸ”ª Loading file to chopper:', file.name);
                     
                     // Check if engine and context are available
                     if (!this.engine) {
-                        console.error('❌ Engine not initialized');
+                        console.error('âŒ Engine not initialized');
                         this.showError('Audio engine not ready. Please wait for initialization.');
                         return;
                     }
                     
                     if (!this.engine.context) {
-                        console.error('❌ Audio context not available');
+                        console.error('âŒ Audio context not available');
                         this.showError('Audio context not ready.');
                         return;
                     }
                     
-                    console.log('✅ Engine and context available');
+                    console.log('âœ… Engine and context available');
                     
                     // Convert file to audio buffer
                     const arrayBuffer = await file.arrayBuffer();
-                    console.log(`📁 File read: ${arrayBuffer.byteLength} bytes`);
+                    console.log(`ðŸ“ File read: ${arrayBuffer.byteLength} bytes`);
                     
                     const audioBuffer = await this.engine.context.decodeAudioData(arrayBuffer);
-                    console.log(`🎵 Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.numberOfChannels}ch`);
+                    console.log(`ðŸŽµ Audio decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.numberOfChannels}ch`);
                     
                     // Initialize chopper if it doesn't exist
                     if (!this.engine.chopper) {
-                        console.log('🔪 Initializing chopper object');
+                        console.log('ðŸ”ª Initializing chopper object');
                         this.engine.chopper = {
                             buffer: null,
                             filename: '',
@@ -2351,31 +2735,33 @@
                     this.engine.chopper.filename = file.name;
                     this.engine.chopper.slices = [];
                     
-                    console.log('✅ File successfully loaded to chopper');
+                    console.log('File successfully loaded to chopper');
                     this.showMessage(`${file.name} loaded for chopping!`, 'success');
                     
-                    // Update chopper waveform display if available
-                    if (this.engine.renderChopper) {
-                        console.log('🎨 Rendering chopper waveform');
-                        this.engine.renderChopper();
-                    } else {
-                        console.log('ℹ️ No renderChopper method available');
-                    }
+                    // Draw waveform on the chop workflow canvas
+                    await this.drawChopWaveformAsync();
                     
-                    // Auto-create basic slices after a short delay
-                    setTimeout(() => {
-                        this.createBasicSlices();
-                        this.showMessage(`Created 8 slices from ${file.name}`, 'success');
-                    }, 500);
+                    // Create basic slices and redraw
+                    this.createBasicSlices();
+                    this.initializeSlicePads();
+                    await this.drawChopWaveformAsync();
+                    this.showMessage(`Created 8 slices from ${file.name}`, 'success');
+
                     
                 } catch (error) {
-                    console.error('❌ Failed to load file to chopper:', error);
+                    console.error('âŒ Failed to load file to chopper:', error);
                     
                     if (error.name === 'EncodingError') {
                         this.showError(`Invalid audio file: ${file.name}`);
                     } else {
                         this.showError(`Failed to load ${file.name}: ${error.message}`);
                     }
+                } finally {
+                    // Always clean up loading state
+                    this.isLoadingChopper = false;
+                    const loadButton = document.getElementById('load-sample');
+                    if (loadButton) loadButton.style.opacity = '1';
+                    console.log('🔄 Loading state cleaned up');
                 }
             }
             
@@ -2399,7 +2785,7 @@
                     });
                 }
                 
-                console.log(`🔪 Created ${sliceCount} equal slices`);
+                console.log(`ðŸ”ª Created ${sliceCount} equal slices`);
                 this.updatePadLabels();
             }
             
@@ -2426,7 +2812,7 @@
                     const duration = slice.end - slice.start;
                     
                     source.start(startTime, slice.start, duration);
-                    console.log(`🔪 Playing slice ${index + 1}: ${slice.start.toFixed(2)}s - ${slice.end.toFixed(2)}s`);
+                    console.log(`ðŸ”ª Playing slice ${index + 1}: ${slice.start.toFixed(2)}s - ${slice.end.toFixed(2)}s`);
                     
                 } catch (error) {
                     console.error('Failed to play slice:', error);
@@ -2454,7 +2840,7 @@
                     
                     // Play sample
                     source.start(this.engine.context.currentTime);
-                    console.log(`🎵 Playing sample ${index + 1}: ${sample.name}`);
+                    console.log(`ðŸŽµ Playing sample ${index + 1}: ${sample.name}`);
                     
                 } catch (error) {
                     console.error('Failed to play sample:', error);
@@ -2464,14 +2850,14 @@
         }
         
         // Initialize Neural Interface
-        console.log('🧠 Initializing Neural Interface...');
+        console.log('ðŸ§  Initializing Neural Interface...');
         const neuralInterface = new NeuralInterface();
         
         // Fallback: Add manual trigger after 3 seconds if audio hasn't initialized
         setTimeout(() => {
             const overlay = document.getElementById('loading-overlay');
             if (overlay && overlay.style.display !== 'none') {
-                console.log('⚠️ Adding manual trigger button...');
+                console.log('âš ï¸ Adding manual trigger button...');
                 
                 // Add click instruction
                 const instruction = overlay.querySelector('p');
@@ -2479,7 +2865,7 @@
                     instruction.innerHTML = 'Click anywhere to start audio<br><small>Or click this message</small>';
                     instruction.style.cursor = 'pointer';
                     instruction.onclick = () => {
-                        console.log('🖱️ Manual trigger clicked');
+                        console.log('ðŸ–±ï¸ Manual trigger clicked');
                         neuralInterface.initializeAudio();
                     };
                 }
@@ -2491,11 +2877,107 @@
     </script>
     
     <!-- Service Worker Registration -->
+    <!-- Button Labeling Script for Better UX -->
+    <script>
+        // Fix cryptic buttons with clear labels and proper emoji
+        setTimeout(() => {
+            // Fix button elements with proper emoji and labels
+            const buttonUpdates = {
+                'play-all': { emoji: '▶️', label: 'PLAY' },
+                'stop-all': { emoji: '⏹️', label: 'STOP' },
+                'record-mode': { emoji: '🔴', label: 'REC' },
+                'metronome': { emoji: '🥁', label: 'METRO' },
+                'save-project': { emoji: '💾', label: 'SAVE' },
+                'load-project': { emoji: '📁', label: 'LOAD' },
+                'load-sample': { emoji: '📁', label: 'LOAD' },
+                'auto-slice': { emoji: '⚡', label: 'AUTO' },
+                'manual-slice': { emoji: '✋', label: 'MANUAL' },
+                'ai-slice': { emoji: '🤖', label: 'AI' },
+                'record-arm': { emoji: '🔴', label: 'ARM' },
+                'overdub-mode': { emoji: '🎵', label: 'OVERDUB' },
+                'monitor-toggle': { emoji: '🎧', label: 'MONITOR' },
+                'mixdown-tracks': { emoji: '💾', label: 'MIXDOWN' },
+                'master-effects': { emoji: '🎛️', label: 'EFFECTS' },
+                'import-samples': { emoji: '📂', label: 'IMPORT' },
+                'clear-samples': { emoji: '🗑️', label: 'CLEAR' },
+                'midi-connect': { emoji: '🎹', label: 'MIDI' },
+                'ai-assistant': { emoji: '✨', label: 'AI' },
+                'pad-mode-cycle': { emoji: '🎵', label: 'MODE' }
+            };
+            
+            // Fix all buttons
+            Object.entries(buttonUpdates).forEach(([id, config]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    // Clear existing content and add emoji + label structure
+                    element.innerHTML = `<div>${config.emoji}</div><div class="btn-label">${config.label}</div>`;
+                    element.title = `${config.label} - Click to ${config.label.toLowerCase()}`;
+                }
+            });
+            
+            // Fix titles and headers with corrupted emoji
+            const titlesFixes = [
+                { selector: 'h1', text: '🎵 Neural Studio' },
+                { selector: 'h2', text: '🎵 Neural Audio Engine' },
+                { selector: '.panel-title', replacements: {
+                    'Neural Pads': '🎹 Neural Pads',
+                    'Recording Laboratory': '📹 Recording Laboratory', 
+                    'Quantum Slicer': '🔪 Quantum Slicer',
+                    'Mixing Matrix': '🎛️ Mixing Matrix',
+                    'Master Control': '🎚️ Master Control',
+                    'Master Effects': '🎵 Master Effects',
+                    'Sample Matrix': '📦 Sample Matrix',
+                    'MIDI Hub': '🎹 MIDI Hub',
+                    'AI Neural Net': '🤖 AI Neural Net'
+                }}
+            ];
+            
+            // Fix main title
+            const mainTitle = document.querySelector('h1');
+            if (mainTitle) {
+                mainTitle.textContent = '🎵 Neural Studio';
+            }
+            
+            // Fix loading screen title
+            const loadingTitle = document.querySelector('h2');
+            if (loadingTitle) {
+                loadingTitle.textContent = '🎵 Neural Audio Engine';
+            }
+            
+            // Fix workflow tab buttons
+            const workflowTabs = document.querySelectorAll('.workflow-tab');
+            const tabLabels = ['🎹 Live', '📹 Capture', '🔪 Chop', '🎛️ Mix'];
+            workflowTabs.forEach((tab, index) => {
+                if (tabLabels[index]) {
+                    tab.textContent = tabLabels[index];
+                }
+            });
+            
+            // Fix panel titles
+            const panelTitles = document.querySelectorAll('.panel-title');
+            panelTitles.forEach(title => {
+                const text = title.textContent.trim();
+                if (text.includes('Neural Pads')) title.textContent = '🎹 Neural Pads';
+                if (text.includes('Live Performance Stage')) title.textContent = '🎤 Live Performance Stage';
+                if (text.includes('Recording Laboratory')) title.textContent = '📹 Recording Laboratory';
+                if (text.includes('Quantum Slicer')) title.textContent = '🔪 Quantum Slicer';
+                if (text.includes('Mixing Matrix')) title.textContent = '🎛️ Mixing Matrix';
+                if (text.includes('Master Control')) title.textContent = '🎚️ Master Control';
+                if (text.includes('Master Effects')) title.textContent = '🎵 Master Effects';
+                if (text.includes('Sample Matrix')) title.textContent = '📦 Sample Matrix';
+                if (text.includes('MIDI Hub')) title.textContent = '🎹 MIDI Hub';
+                if (text.includes('AI Neural Net')) title.textContent = '🤖 AI Neural Net';
+            });
+            
+            console.log('✨ All buttons and titles updated with clear labels and proper emoji!');
+        }, 1500);
+    </script>
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('✅ SW registered:', reg.scope))
+                    .then(reg => console.log('âœ… SW registered:', reg.scope))
                     .catch(err => console.warn('SW registration failed:', err));
             });
         }

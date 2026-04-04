@@ -45,133 +45,205 @@ export function installTracksImpls(engine) {
   }
 
   function createTrackCard(trackIndex, mode) {
+    const viewPrefix = mode === 'unified' ? 'unified-tracks' : 'loopstation-tracks';
+    const e = this; // engine reference for closures
+
+    // ── Root card ────────────────────────────────────────────────────────────
     const card = document.createElement('div');
     card.className = 'track-card';
     card.id = `track-${trackIndex}`;
-    
-    const viewPrefix = mode === 'unified' ? 'unified-tracks' : 'loopstation-tracks';
-    
-    card.innerHTML = `
-      <div class="track-header">
-          <div class="track-title">Track ${trackIndex + 1}</div>
-          <div class="track-controls">
-              <button class="btn mini-btn" onclick="engine.toggleMute(${trackIndex})" id="mute-btn-${trackIndex}" title="Mute track">M</button>
-              <button class="btn mini-btn" onclick="engine.toggleSolo(${trackIndex})" id="solo-btn-${trackIndex}" title="Solo track">S</button>
-              <button class="btn mini-btn" onclick="engine.toggleRecording(${trackIndex})" id="rec-btn-${trackIndex}">REC</button>
-              <button class="btn mini-btn" onclick="engine.playTrack(${trackIndex})">PLAY</button>
-              <button class="btn mini-btn" onclick="engine.stopTrack(${trackIndex})">STOP</button>
-              <button class="btn mini-btn" onclick="engine.clearTrack(${trackIndex})">CLR</button>
-          </div>
-      </div>
-      <div class="waveform-display">
-          <canvas class="waveform-canvas" id="${viewPrefix}-waveform-${trackIndex}"></canvas>
-          <div class="playhead" id="${viewPrefix}-playhead-${trackIndex}"></div>
-          <div class="waveform-trim-controls" style="position: absolute; top: 2px; right: 2px; display: none;" id="${viewPrefix}-trim-controls-${trackIndex}">
-              <button class="btn mini-btn" onclick="engine.applyTrackTrim(${trackIndex})" style="font-size: 10px; padding: 2px 6px;">Apply Trim</button>
-              <button class="btn mini-btn" onclick="engine.resetTrackTrim(${trackIndex})" style="font-size: 10px; padding: 2px 6px;">Reset</button>
-          </div>
-      </div>
-      <div class="control-row">
-          <div class="control-item">
-              <span class="control-label">Vol</span>
-              <input type="range" id="track-vol-${trackIndex}" min="0" max="100" value="80">
-              <span class="value-display">80%</span>
-          </div>
-          <div class="control-item">
-              <span class="control-label">Pan</span>
-              <input type="range" id="track-pan-${trackIndex}" min="-1" max="1" step="0.1" value="0">
-              <span class="value-display">0</span>
-          </div>
-          <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.importTrackFromFileDialog(${trackIndex})">LOAD</button>
-              <button class="btn mini-btn" onclick="engine.exportTrackWav(${trackIndex})">SAVE</button>
-              <button class="btn mini-btn" onclick="engine.exportTrackToChopper(${trackIndex})">TO CHOP</button>
-          </div>
-      </div>
-      <div class="control-row">
-          <div class="control-item">
-              <span class="control-label">Trim Start</span>
-              <input type="number" id="trim-start-${trackIndex}" min="0" step="0.1" value="0" style="width: 80px;">
-              <span style="margin-left: 5px;">s</span>
-          </div>
-          <div class="control-item">
-              <span class="control-label">Trim End</span>
-              <input type="number" id="trim-end-${trackIndex}" min="0" step="0.1" value="" placeholder="Full" style="width: 80px;">
-              <span style="margin-left: 5px;">s</span>
-          </div>
-          <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.applyTrimFromInputs(${trackIndex})">SET TRIM</button>
-              <button class="btn mini-btn" onclick="engine.resetTrackTrim(${trackIndex})">RESET</button>
-              <button class="btn mini-btn" onclick="engine.applyTrackTrim(${trackIndex})">APPLY</button>
-          </div>
-      </div>
-      <div class="control-row">
-          <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.splitTrackAtTime(${trackIndex})" title="Split track at current position">SPLIT</button>
-              <button class="btn mini-btn" onclick="engine.duplicateTrack(${trackIndex})" title="Duplicate to next empty track">DUP</button>
-              <button class="btn mini-btn" onclick="engine.reverseTrack(${trackIndex})" title="Reverse audio">REV</button>
-          </div>
-          <div class="control-item">
-              <button class="btn mini-btn" onclick="engine.normalizeTrack(${trackIndex})" title="Normalize volume">NORM</button>
-              <button class="btn mini-btn" onclick="engine.fadeInTrack(${trackIndex})" title="Apply fade in">FADE IN</button>
-              <button class="btn mini-btn" onclick="engine.fadeOutTrack(${trackIndex})" title="Apply fade out">FADE OUT</button>
-          </div>
-      </div>
-          <div class="control-row fx-controls">
-            <div class="control-item">
-              <label class="control-label">FX Preset</label>
-              <select id="track-effect-preset-${trackIndex}" style="max-width: 140px;">
-                <option value="dry">Dry (no FX)</option>
-                <option value="ambient">Ambient</option>
-                <option value="lo-fi">Lo-Fi</option>
-                <option value="space">Space</option>
-                <option value="cathedral">Cathedral</option>
-                <option value="hall">Hall</option>
-                <option value="plate">Plate</option>
-                <option value="spring">Spring</option>
-                <option value="echo">Echo</option>
-                <option value="slapback">Slapback</option>
-                <option value="telephone">Telephone</option>
-                <option value="radio">Radio</option>
-                <option value="underwater">Underwater</option>
-                <option value="cave">Cave</option>
-                <option value="warm">Warm</option>
-                <option value="bright">Bright</option>
-                <option value="vintage">Vintage</option>
-                <option value="dubby">Dubby</option>
-              </select>
-            </div>
-            <div class="control-item">
-              <button class="btn mini-btn" onclick="window.applyPresetToTrack(${trackIndex}, document.getElementById('track-effect-preset-${trackIndex}').value)">Apply</button>
-              <button class="btn mini-btn" onclick="window.applyPresetToTrack(${trackIndex}, 'dry')">Dry</button>
-            </div>
-          </div>
-    `;
-    
-    const volSlider = card.querySelector(`#track-vol-${trackIndex}`);
-    const panSlider = card.querySelector(`#track-pan-${trackIndex}`);
-    
-    if (volSlider) {
-      volSlider.addEventListener('input', (e) => {
-        var track = this.tracks[trackIndex];
-        if (track.gain) {
-          track.gain.gain.value = e.target.value / 100;
-        }
-        e.target.nextElementSibling.textContent = e.target.value + '%';
-      });
-    }
-    
-    if (panSlider) {
-      panSlider.addEventListener('input', (e) => {
-        var track = this.tracks[trackIndex];
-        track.pan = parseFloat(e.target.value);
-        if (track.panner) {
-          track.panner.pan.value = track.pan;
-        }
-        e.target.nextElementSibling.textContent = e.target.value;
-      });
-    }
-    
+
+    // ── Header ───────────────────────────────────────────────────────────────
+    const header = document.createElement('div');
+    header.className = 'track-header';
+
+    const title = document.createElement('div');
+    title.className = 'track-title';
+    title.textContent = `Track ${trackIndex + 1}`;
+
+    const controls = document.createElement('div');
+    controls.className = 'track-controls';
+
+    const btn = (label, id, handler, title_) => {
+      const b = document.createElement('button');
+      b.className = 'btn mini-btn';
+      b.textContent = label;
+      if (id)     b.id = id;
+      if (title_) b.title = title_;
+      b.addEventListener('click', handler);
+      return b;
+    };
+
+    const muteBtn = btn('M', `mute-btn-${trackIndex}`, () => e.toggleMute(trackIndex), 'Mute track');
+    const soloBtn = btn('S', `solo-btn-${trackIndex}`, () => e.toggleSolo(trackIndex), 'Solo track');
+    const recBtn  = btn('REC', `rec-btn-${trackIndex}`, () => e.toggleRecording(trackIndex));
+    const playBtn = btn('PLAY', null, () => e.playTrack(trackIndex));
+    const stopBtn = btn('STOP', null, () => e.stopTrack(trackIndex));
+    const clrBtn  = btn('CLR',  null, () => e.clearTrack(trackIndex));
+
+    [muteBtn, soloBtn, recBtn, playBtn, stopBtn, clrBtn].forEach(b => controls.appendChild(b));
+    header.appendChild(title);
+    header.appendChild(controls);
+
+    // ── Waveform display ─────────────────────────────────────────────────────
+    const waveWrap = document.createElement('div');
+    waveWrap.className = 'waveform-display';
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'waveform-canvas';
+    canvas.id = `${viewPrefix}-waveform-${trackIndex}`;
+
+    const playhead = document.createElement('div');
+    playhead.className = 'playhead';
+    playhead.id = `${viewPrefix}-playhead-${trackIndex}`;
+
+    const trimControls = document.createElement('div');
+    trimControls.className = 'waveform-trim-controls';
+    trimControls.id = `${viewPrefix}-trim-controls-${trackIndex}`;
+    Object.assign(trimControls.style, { position: 'absolute', top: '2px', right: '2px', display: 'none' });
+    trimControls.appendChild(btn('Apply Trim', null, () => e.applyTrackTrim(trackIndex)));
+    trimControls.appendChild(btn('Reset',      null, () => e.resetTrackTrim(trackIndex)));
+
+    waveWrap.appendChild(canvas);
+    waveWrap.appendChild(playhead);
+    waveWrap.appendChild(trimControls);
+
+    // ── Volume / Pan row ─────────────────────────────────────────────────────
+    const volPanRow = document.createElement('div');
+    volPanRow.className = 'control-row';
+
+    const mkSlider = (label, id, min, max, step, value, onInput) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'control-item';
+      const lbl = document.createElement('span');
+      lbl.className = 'control-label';
+      lbl.textContent = label;
+      const slider = document.createElement('input');
+      Object.assign(slider, { type: 'range', id, min, max, step, value });
+      const display = document.createElement('span');
+      display.className = 'value-display';
+      slider.addEventListener('input', ev => { onInput(ev); display.textContent = ev.target.value + (label === 'Vol' ? '%' : ''); });
+      wrap.appendChild(lbl); wrap.appendChild(slider); wrap.appendChild(display);
+      return { wrap, slider, display };
+    };
+
+    const vol = mkSlider('Vol', `track-vol-${trackIndex}`, 0, 100, 1, 80, ev => {
+      const track = e.tracks[trackIndex];
+      if (track.gain) track.gain.gain.value = ev.target.value / 100;
+    });
+    vol.display.textContent = '80%';
+
+    const pan = mkSlider('Pan', `track-pan-${trackIndex}`, -1, 1, 0.1, 0, ev => {
+      const track = e.tracks[trackIndex];
+      track.pan = parseFloat(ev.target.value);
+      if (track.panner) track.panner.pan.value = track.pan;
+    });
+    pan.display.textContent = '0';
+
+    const fileItem = document.createElement('div');
+    fileItem.className = 'control-item';
+    fileItem.appendChild(btn('LOAD',    null, () => e.importTrackFromFileDialog(trackIndex)));
+    fileItem.appendChild(btn('SAVE',    null, () => e.exportTrackWav(trackIndex)));
+    fileItem.appendChild(btn('TO CHOP', null, () => e.exportTrackToChopper(trackIndex)));
+
+    [vol.wrap, pan.wrap, fileItem].forEach(el => volPanRow.appendChild(el));
+
+    // ── Trim row ─────────────────────────────────────────────────────────────
+    const trimRow = document.createElement('div');
+    trimRow.className = 'control-row';
+
+    const mkNumberInput = (label, id, placeholder) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'control-item';
+      const lbl = document.createElement('span');
+      lbl.className = 'control-label';
+      lbl.textContent = label;
+      const input = document.createElement('input');
+      Object.assign(input, { type: 'number', id, min: 0, step: 0.1, value: '', placeholder: placeholder || '' });
+      input.style.width = '80px';
+      const unit = document.createElement('span');
+      unit.textContent = 's';
+      unit.style.marginLeft = '5px';
+      wrap.appendChild(lbl); wrap.appendChild(input); wrap.appendChild(unit);
+      return wrap;
+    };
+
+    const trimBtns = document.createElement('div');
+    trimBtns.className = 'control-item';
+    trimBtns.appendChild(btn('SET TRIM', null, () => e.applyTrimFromInputs(trackIndex)));
+    trimBtns.appendChild(btn('RESET',    null, () => e.resetTrackTrim(trackIndex)));
+    trimBtns.appendChild(btn('APPLY',    null, () => e.applyTrackTrim(trackIndex)));
+
+    [mkNumberInput('Trim Start', `trim-start-${trackIndex}`),
+     mkNumberInput('Trim End',   `trim-end-${trackIndex}`, 'Full'),
+     trimBtns].forEach(el => trimRow.appendChild(el));
+
+    // ── Edit row ─────────────────────────────────────────────────────────────
+    const editRow = document.createElement('div');
+    editRow.className = 'control-row';
+
+    const editLeft = document.createElement('div');
+    editLeft.className = 'control-item';
+    editLeft.appendChild(btn('SPLIT',    null, () => e.splitTrackAtTime(trackIndex),  'Split at current position'));
+    editLeft.appendChild(btn('DUP',      null, () => e.duplicateTrack(trackIndex),    'Duplicate to next empty track'));
+    editLeft.appendChild(btn('REV',      null, () => e.reverseTrack(trackIndex),      'Reverse audio'));
+
+    const editRight = document.createElement('div');
+    editRight.className = 'control-item';
+    editRight.appendChild(btn('NORM',     null, () => e.normalizeTrack(trackIndex),   'Normalize volume'));
+    editRight.appendChild(btn('FADE IN',  null, () => e.fadeInTrack(trackIndex),      'Apply fade in'));
+    editRight.appendChild(btn('FADE OUT', null, () => e.fadeOutTrack(trackIndex),     'Apply fade out'));
+
+    editRow.appendChild(editLeft);
+    editRow.appendChild(editRight);
+
+    // ── FX preset row ────────────────────────────────────────────────────────
+    const fxRow = document.createElement('div');
+    fxRow.className = 'control-row fx-controls';
+
+    const fxItem = document.createElement('div');
+    fxItem.className = 'control-item';
+
+    const fxLabel = document.createElement('label');
+    fxLabel.className = 'control-label';
+    fxLabel.textContent = 'FX Preset';
+
+    const presetOptions = [
+      'dry', 'ambient', 'lo-fi', 'space', 'cathedral', 'hall', 'plate', 'spring',
+      'echo', 'slapback', 'telephone', 'radio', 'underwater', 'cave',
+      'warm', 'bright', 'vintage', 'dubby'
+    ];
+    const select = document.createElement('select');
+    select.id = `track-effect-preset-${trackIndex}`;
+    select.style.maxWidth = '140px';
+    presetOptions.forEach(val => {
+      const opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = val === 'dry' ? 'Dry (no FX)' : val.charAt(0).toUpperCase() + val.slice(1);
+      select.appendChild(opt);
+    });
+
+    fxItem.appendChild(fxLabel);
+    fxItem.appendChild(select);
+
+    const fxBtns = document.createElement('div');
+    fxBtns.className = 'control-item';
+    fxBtns.appendChild(btn('Apply', null, () => {
+      if (typeof window.applyPresetToTrack === 'function')
+        window.applyPresetToTrack(trackIndex, select.value);
+    }));
+    fxBtns.appendChild(btn('Dry', null, () => {
+      if (typeof window.applyPresetToTrack === 'function')
+        window.applyPresetToTrack(trackIndex, 'dry');
+    }));
+
+    fxRow.appendChild(fxItem);
+    fxRow.appendChild(fxBtns);
+
+    // ── Assemble ─────────────────────────────────────────────────────────────
+    [header, waveWrap, volPanRow, trimRow, editRow, fxRow]
+      .forEach(el => card.appendChild(el));
+
     return card;
   }
 
@@ -1215,31 +1287,8 @@ export function installTracksImpls(engine) {
 }
 
 export function attachTracks(engine) {
-  const methodNames = [
-    'renderTracks', 'createTrackCard', 'importTrackFromFileDialog',
-    'startRecording', 'doCountIn', '_updateRecordingPlayhead', 'stopRecording',
-    'mixBuffers', 'mixBuffersAligned', 'playTrack', '_updatePlayhead', 'stopTrack',
-    'clearTrack', 'drawWaveform', 'setupWaveformTrimInteraction',
-    'showTrimControls', 'hideTrimControls', 'showTrimAppliedFeedback'
-  ];
-
-  // Add the per-track effect helpers to the attach list
-  methodNames.push('ensureTrackEffects', 'applyTrackEffectPreset');
-  methodNames.push('copyMasterEffectsToTrack');
-
-  methodNames.forEach(name => {
-    try {
-      const fn = engine[name];
-      if (typeof fn === 'function') {
-        engine[name] = fn.bind(engine);
-      }
-    } catch (e) {
-      console.warn('attachTracks: method not bound', name, e);
-    }
-  });
-
+  // installTracksImpls() already binds all methods directly onto the engine.
+  // This function exists as a hook for future post-install setup.
   engine.tracksModule = engine.tracksModule || {};
-  engine.tracksModule.createUI = () => {
-    try { engine.renderTracks(); } catch (e) { console.warn('renderTracks failed', e); }
-  };
+  engine.tracksModule.createUI = () => engine.renderTracks();
 }

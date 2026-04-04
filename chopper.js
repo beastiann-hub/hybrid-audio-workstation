@@ -74,7 +74,16 @@ export function installChopperImpls(engine) {
     }
 
     if (equalBtn) equalBtn.onclick = () => this.createEqualSlices();
-    if (detectBtn) detectBtn.onclick = () => this.detectTransients();
+    if (detectBtn) detectBtn.onclick = async () => {
+      detectBtn.style.opacity = '0.5';
+      detectBtn.style.pointerEvents = 'none';
+      try {
+        await this.detectTransients();
+      } finally {
+        detectBtn.style.opacity = '1';
+        detectBtn.style.pointerEvents = 'auto';
+      }
+    };
     if (toRowsBtn) toRowsBtn.onclick = () => this.slicesToSequencerRows();
 
     const toTracksBtn = document.getElementById('chop-to-tracks');
@@ -613,8 +622,17 @@ if (toMPCBtn) {
     if (!this.chopper.buffer) return; const duration = this.chopper.buffer.duration; const sliceLength = duration / this.chopper.numSlices; this.chopper.sliceMarkers = []; this.chopper.slices = []; for (let i=0;i<this.chopper.numSlices;i++){ const start = i*sliceLength; const end = (i+1)*sliceLength; this.chopper.sliceMarkers.push(start); this.chopper.slices.push({ start, end }); } this.drawChopperWaveform(); this.drawChopperWaveformMain(); this.renderChopperPads(); this.renderChopperPadsMain(); this.updateStatus(`Created ${this.chopper.numSlices} equal slices`);
   }
 
-  function detectTransients() {
-    if (!this.chopper.buffer) return;
+  async function detectTransients() {
+    if (!this.chopper.buffer) {
+      this.updateStatus('No sample loaded for beat detection');
+      return;
+    }
+    
+    this.updateStatus('🔍 Analyzing beats...');
+    
+    // Use setTimeout to yield control and prevent UI freeze
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
     const data = this.chopper.buffer.getChannelData(0);
     const sampleRate = this.chopper.buffer.sampleRate;
     const sensitivity = this.chopper.sensitivity;
@@ -625,14 +643,110 @@ if (toMPCBtn) {
     const spectralFluxThreshold = 0.02 + sensitivity * 0.2;
     const highFreqThreshold = 0.15 + sensitivity * 0.5;
     const transientCandidates = [];
-    let previousEnergy = 0; let previousSpectralCentroid = 0; let previousHighFreqEnergy = 0;
-    for (let i=0;i<data.length - windowSize;i+=hopSize){ let totalEnergy=0; let highFreqEnergy=0; let magnitudeSum=0; let weightedSum=0; for (let j=0;j<windowSize;j++){ const sample = data[i+j]; const sampleSquared = sample*sample; totalEnergy += sampleSquared; if (j > windowSize * 0.6) highFreqEnergy += sampleSquared; const magnitude = Math.abs(sample); magnitudeSum += magnitude; weightedSum += magnitude * (j/windowSize); } totalEnergy = Math.sqrt(totalEnergy / windowSize); highFreqEnergy = Math.sqrt(highFreqEnergy / (windowSize * 0.4)); const spectralCentroid = magnitudeSum > 0 ? weightedSum / magnitudeSum : 0; const energyIncrease = totalEnergy > previousEnergy * baseEnergyThreshold; const spectralChange = Math.abs(spectralCentroid - previousSpectralCentroid) > spectralFluxThreshold; const highFreqIncrease = highFreqEnergy > previousHighFreqEnergy * (1 + highFreqThreshold); const aboveNoiseFloor = totalEnergy > 0.008; let criteriaCount = 0; if (energyIncrease) criteriaCount++; if (spectralChange) criteriaCount++; if (highFreqIncrease) criteriaCount++; const isTransient = criteriaCount >= 2 && aboveNoiseFloor; if (isTransient) { const timePosition = i / sampleRate; let tooClose=false; for (const candidate of transientCandidates) { if (Math.abs(candidate.time - timePosition) < (minDistance / sampleRate)) { tooClose = true; break; } } if (!tooClose) transientCandidates.push({ time: timePosition, confidence: criteriaCount + (totalEnergy * 5) }); } previousEnergy = previousEnergy * 0.3 + totalEnergy * 0.7; previousSpectralCentroid = previousSpectralCentroid * 0.5 + spectralCentroid * 0.5; previousHighFreqEnergy = previousHighFreqEnergy * 0.4 + highFreqEnergy * 0.6; }
-    transientCandidates.sort((a,b)=>b.confidence - a.confidence);
+    
+    let previousEnergy = 0;
+    let previousSpectralCentroid = 0; 
+    let previousHighFreqEnergy = 0;
+    
+    // Process in chunks to avoid blocking
+    const totalSamples = data.length - windowSize;
+    const chunkSize = Math.floor(totalSamples / 20); // 20 chunks
+    
+    for (let chunk = 0; chunk < 20; chunk++) {
+      const startIdx = chunk * chunkSize;
+      const endIdx = Math.min(startIdx + chunkSize, totalSamples);
+      
+      for (let i = startIdx; i < endIdx; i += hopSize) {
+        let totalEnergy = 0;
+        let highFreqEnergy = 0;
+        let magnitudeSum = 0;
+        let weightedSum = 0;
+        
+        for (let j = 0; j < windowSize; j++) {
+          const sample = data[i + j];
+          const sampleSquared = sample * sample;
+          totalEnergy += sampleSquared;
+          
+          if (j > windowSize * 0.6) {
+            highFreqEnergy += sampleSquared;
+          }
+          
+          const magnitude = Math.abs(sample);
+          magnitudeSum += magnitude;
+          weightedSum += magnitude * (j / windowSize);
+        }
+        
+        totalEnergy = Math.sqrt(totalEnergy / windowSize);
+        highFreqEnergy = Math.sqrt(highFreqEnergy / (windowSize * 0.4));
+        const spectralCentroid = magnitudeSum > 0 ? weightedSum / magnitudeSum : 0;
+        
+        const energyIncrease = totalEnergy > previousEnergy * baseEnergyThreshold;
+        const spectralChange = Math.abs(spectralCentroid - previousSpectralCentroid) > spectralFluxThreshold;
+        const highFreqIncrease = highFreqEnergy > previousHighFreqEnergy * (1 + highFreqThreshold);
+        const aboveNoiseFloor = totalEnergy > 0.008;
+        
+        let criteriaCount = 0;
+        if (energyIncrease) criteriaCount++;
+        if (spectralChange) criteriaCount++;
+        if (highFreqIncrease) criteriaCount++;
+        
+        const isTransient = criteriaCount >= 2 && aboveNoiseFloor;
+        
+        if (isTransient) {
+          const timePosition = i / sampleRate;
+          let tooClose = false;
+          
+          for (const candidate of transientCandidates) {
+            if (Math.abs(candidate.time - timePosition) < (minDistance / sampleRate)) {
+              tooClose = true;
+              break;
+            }
+          }
+          
+          if (!tooClose) {
+            transientCandidates.push({
+              time: timePosition,
+              confidence: criteriaCount + (totalEnergy * 5)
+            });
+          }
+        }
+        
+        previousEnergy = previousEnergy * 0.3 + totalEnergy * 0.7;
+        previousSpectralCentroid = previousSpectralCentroid * 0.5 + spectralCentroid * 0.5;
+        previousHighFreqEnergy = previousHighFreqEnergy * 0.4 + highFreqEnergy * 0.6;
+      }
+      
+      // Yield control every chunk to maintain UI responsiveness
+      if (chunk % 5 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 1));
+      }
+    }
+    
+    transientCandidates.sort((a, b) => b.confidence - a.confidence);
     const maxTransients = Math.min(transientCandidates.length, this.chopper.numSlices - 1);
     const selectedTransients = transientCandidates.slice(0, maxTransients);
-    selectedTransients.sort((a,b)=>a.time - b.time);
-    this.chopper.sliceMarkers = [0, ...selectedTransients.map(t=>t.time)]; this.chopper.slices = []; const allMarkers = [...this.chopper.sliceMarkers, this.chopper.buffer.duration]; for (let i=0;i<allMarkers.length-1;i++){ const start = allMarkers[i]; const end = allMarkers[i+1]; this.chopper.slices.push({ start, end }); }
-    this.drawChopperWaveform(); this.drawChopperWaveformMain(); this.renderChopperPads(); this.renderChopperPadsMain(); const sensPercent = (sensitivity*100).toFixed(0); const avgConfidence = selectedTransients.length>0 ? (selectedTransients.reduce((sum,t)=>sum+t.confidence,0)/selectedTransients.length).toFixed(1) : 0; this.updateStatus(`Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
+    selectedTransients.sort((a, b) => a.time - b.time);
+    
+    this.chopper.sliceMarkers = [0, ...selectedTransients.map(t => t.time)];
+    this.chopper.slices = [];
+    
+    const allMarkers = [...this.chopper.sliceMarkers, this.chopper.buffer.duration];
+    for (let i = 0; i < allMarkers.length - 1; i++) {
+      const start = allMarkers[i];
+      const end = allMarkers[i + 1];
+      this.chopper.slices.push({ start, end });
+    }
+    
+    this.drawChopperWaveform();
+    this.drawChopperWaveformMain();
+    this.renderChopperPads();
+    this.renderChopperPadsMain();
+    
+    const sensPercent = (sensitivity * 100).toFixed(0);
+    const avgConfidence = selectedTransients.length > 0 ?
+      (selectedTransients.reduce((sum, t) => sum + t.confidence, 0) / selectedTransients.length).toFixed(1) : 0;
+    
+    this.updateStatus(`✅ Detected ${this.chopper.slices.length} beats (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
   }
 
   function renderChopperPads() {

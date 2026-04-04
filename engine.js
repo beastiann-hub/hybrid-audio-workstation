@@ -67,108 +67,63 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
 
         async init() {
             try {
-                // Delegate core audio setup to core module to centralize context and effects
-                try {
-                    attachCore(this);
-                } catch (e) {
-                    console.warn('attachCore failed, falling back to inline init', e);
-                    // If attachCore fails, fall back to inline initialization (best-effort)
-                    if (!this.context) this.context = new (window.AudioContext || window.webkitAudioContext)();
-                    if (!this.masterGain) {
-                        this.masterGain = this.context.createGain();
-                        this.masterGain.gain.value = 0.7;
-                        this.masterGain.connect(this.context.destination);
-                    }
+                // ── 1. Core audio context (fatal if this fails) ──────────────────
+                attachCore(this);
+                // Backwards-compatible aliases (property assignment never throws)
+                if (!this.audioContext) this.audioContext = this.context;
+                if (!this.audioCtx)     this.audioCtx     = this.context;
+
+                // ── 2. Module installations (each is required; log which one fails) ─
+                const modules = [
+                    () => installTracksImpls(this),
+                    () => attachTracks(this),
+                    () => installChopperImpls(this),
+                    () => attachChopper(this),
+                    () => installSequencerImpls(this),
+                    () => attachSequencer(this),
+                ];
+                for (const install of modules) {
+                    try { install(); }
+                    catch (e) { console.error('Module install failed:', install.toString().slice(6, 40), e); }
                 }
-                // Ensure backwards-compatible AudioContext aliases exist whether attachCore succeeded or fallback used
-                try {
-                    if (this.context && !this.audioContext) this.audioContext = this.context;
-                    if (this.context && !this.audioCtx) this.audioCtx = this.context;
-                } catch (e) {
-                    // ignore
-                }
 
-                // Install and attach track helpers (module boundary)
-                try { installTracksImpls(this); console.log('installTracksImpls completed; engine.applyTrackEffectPreset:', typeof this.applyTrackEffectPreset); } catch (e) { console.warn('installTracksImpls failed', e); }
-                try { attachTracks(this); } catch (e) { console.warn('attachTracks failed', e); }
-
-                // Install and attach chopper helpers
-                try { installChopperImpls(this); } catch (e) { console.warn('installChopperImpls failed', e); }
-                try { attachChopper(this); } catch (e) { console.warn('attachChopper failed', e); }
-
-                // Install sequencer implementations and attach helpers
-                try { installSequencerImpls(this); } catch (e) { console.warn('installSequencerImpls failed', e); }
-                try { attachSequencer(this); } catch (e) { console.warn('attachSequencer failed', e); }
-                
-                // Initialize tracks
+                // ── 3. Track objects ─────────────────────────────────────────────
                 for (let i = 0; i < this.maxTracks; i++) {
                     this.tracks.push({
-                        buffer: null,
-                        source: null,
-                        gain: null,
-                        panner: null,
-                        isPlaying: false,
-                        isRecording: false,
-                        recorder: null,
-                        chunks: [],
-                        pan: 0,
-                        volume: 100,
-                        sliceMarkers: [],
-                        _playheadRAF: null,
-                        _recordingRAF: null,
-                        _playheadStartTime: null,
-                        _recordingStartTime: null,
-                        trimStart: 0,
-                        trimEnd: null, // null means use full length
-                        muted: false,
-                        soloed: false
+                        buffer: null, source: null, gain: null, panner: null,
+                        isPlaying: false, isRecording: false,
+                        recorder: null, chunks: [],
+                        pan: 0, volume: 100, sliceMarkers: [],
+                        _playheadRAF: null, _recordingRAF: null,
+                        _playheadStartTime: null, _recordingStartTime: null,
+                        trimStart: 0, trimEnd: null,
+                        muted: false, soloed: false
                     });
                 }
-                
-                // Initialize undo stack
                 this.undoStack = [];
-                
-                // Create per-track effect send nodes directly so per-track FX are always available
+
+                // ── 4. Per-track FX send nodes ───────────────────────────────────
+                // These are optional — a single warn if the loop fails is enough.
                 try {
-                    console.log('Creating per-track sends for', this.maxTracks, 'tracks...');
-                    for (let i = 0; i < this.maxTracks; i++) {
-                        try {
-                            const track = this.tracks[i];
-                            if (!track) continue;
-                            // create sends if context and global effect buses are present
-                            if (this.context) {
-                                try {
-                                    track.reverbSend = track.reverbSend || this.context.createGain();
-                                    track.reverbSend.gain.value = track.reverbSend.gain.value || 0;
-                                    if (this.effects && this.effects.reverbSend) track.reverbSend.connect(this.effects.reverbSend);
-                                } catch (e) {
-                                    console.warn('Failed to create/connect track.reverbSend for', i, e);
-                                }
-                                try {
-                                    track.delaySend = track.delaySend || this.context.createGain();
-                                    track.delaySend.gain.value = track.delaySend.gain.value || 0;
-                                    if (this.effects && this.effects.delaySend) track.delaySend.connect(this.effects.delaySend);
-                                } catch (e) {
-                                    console.warn('Failed to create/connect track.delaySend for', i, e);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('per-track send init failed for track', i, e);
-                        }
+                    for (const track of this.tracks) {
+                        track.reverbSend = this.context.createGain();
+                        track.reverbSend.gain.value = 0;
+                        track.reverbSend.connect(this.effects.reverbSend);
+
+                        track.delaySend = this.context.createGain();
+                        track.delaySend.gain.value = 0;
+                        track.delaySend.connect(this.effects.delaySend);
                     }
-                    console.log('Per-track sends created. Track 0 reverbSend:', !!this.tracks[0]?.reverbSend);
                 } catch (e) {
-                    console.warn('Error while creating per-track sends during init', e);
+                    console.warn('Per-track FX sends partially failed:', e);
                 }
-                
-                // Initialize UI components
+
+                // ── 5. UI initialisation ─────────────────────────────────────────
                 this.initChopper();
                 this.bindUI();
                 this.renderTracks();
-                
-                // Start meters
                 this.startMeters();
-                
+
                 return true;
             } catch (error) {
                 console.error('Audio initialization failed:', error);
@@ -176,26 +131,7 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             }
         }
 
-        // Track methods moved to tracks.js - implementation installed via installTracksImpls(engine)
-        // These stub methods are kept for reference but functionality is in tracks.js
-        renderTracks() { throw new Error('renderTracks should be bound by installTracksImpls'); }
-        createTrackCard(trackIndex, mode) { throw new Error('createTrackCard should be bound by installTracksImpls'); }
-        importTrackFromFileDialog(trackIndex) { throw new Error('importTrackFromFileDialog should be bound by installTracksImpls'); }
-        startRecording(trackIndex) { throw new Error('startRecording should be bound by installTracksImpls'); }
-        doCountIn() { throw new Error('doCountIn should be bound by installTracksImpls'); }
-        _updateRecordingPlayhead(trackIndex) { throw new Error('_updateRecordingPlayhead should be bound by installTracksImpls'); }
-        stopRecording(trackIndex) { throw new Error('stopRecording should be bound by installTracksImpls'); }
-        mixBuffers(buffer1, buffer2) { throw new Error('mixBuffers should be bound by installTracksImpls'); }
-        mixBuffersAligned(existingBuffer, newBuffer) { throw new Error('mixBuffersAligned should be bound by installTracksImpls'); }
-        playTrack(trackIndex) { throw new Error('playTrack should be bound by installTracksImpls'); }
-        _updatePlayhead(trackIndex) { throw new Error('_updatePlayhead should be bound by installTracksImpls'); }
-        stopTrack(trackIndex) { throw new Error('stopTrack should be bound by installTracksImpls'); }
-        clearTrack(trackIndex) { throw new Error('clearTrack should be bound by installTracksImpls'); }
-        drawWaveform(trackIndex, buffer, containerId = null) { throw new Error('drawWaveform should be bound by installTracksImpls'); }
-        setupWaveformTrimInteraction(canvas, trackIndex, duration) { throw new Error('setupWaveformTrimInteraction should be bound by installTracksImpls'); }
-        showTrimControls(trackIndex) { throw new Error('showTrimControls should be bound by installTracksImpls'); }
-        hideTrimControls(trackIndex) { throw new Error('hideTrimControls should be bound by installTracksImpls'); }
-        showTrimAppliedFeedback(trackIndex) { throw new Error('showTrimAppliedFeedback should be bound by installTracksImpls'); }
+        // Track methods are installed at runtime by installTracksImpls() in tracks.js
         
         startMeters() {
             const updateMeters = () => {
@@ -218,775 +154,62 @@ import { attachSequencer, installSequencerImpls } from './sequencer.js';
             requestAnimationFrame(updateMeters);
         }
         
-        // ===== CHOPPER METHODS MOVED TO chopper.js =====
-        // These are stub methods that will be bound by installChopperImpls(engine) during init()
-        // Do NOT call these directly - they will throw errors if accessed before installChopperImpls runs
-        
-        initChopper() { throw new Error('initChopper should be bound by installChopperImpls'); }
-        drawChopperWaveform() { throw new Error('drawChopperWaveform should be bound by installChopperImpls'); }
-        stopAllChopperSamples() { throw new Error('stopAllChopperSamples should be bound by installChopperImpls'); }
-        setupManualChopMode() { throw new Error('setupManualChopMode should be bound by installChopperImpls'); }
-        findNearbyMarker(timePosition, canvas) { throw new Error('findNearbyMarker should be bound by installChopperImpls'); }
-        addSliceMarker(timePosition) { throw new Error('addSliceMarker should be bound by installChopperImpls'); }
-        updateSlicesFromMarkers() { throw new Error('updateSlicesFromMarkers should be bound by installChopperImpls'); }
-        clearSliceMarkers() { throw new Error('clearSliceMarkers should be bound by installChopperImpls'); }
-        toggleManualMode() { throw new Error('toggleManualMode should be bound by installChopperImpls'); }
-        createSlicesFromMarkers() { throw new Error('createSlicesFromMarkers should be bound by installChopperImpls'); }
-        smartSlice() { throw new Error('smartSlice should be bound by installChopperImpls'); }
-        loadChopperFile() { throw new Error('loadChopperFile should be bound by installChopperImpls'); }
-        drawChopperWaveformMain() { throw new Error('drawChopperWaveformMain should be bound by installChopperImpls'); }
-        setupManualChopModeMain() { throw new Error('setupManualChopModeMain should be bound by installChopperImpls'); }
-        renderChopperPadsMain() { throw new Error('renderChopperPadsMain should be bound by installChopperImpls'); }
-        updateChopperInfo() { throw new Error('updateChopperInfo should be bound by installChopperImpls'); }
-        updateSliceCountDisplay() { throw new Error('updateSliceCountDisplay should be bound by installChopperImpls'); }
-        playFullSample() { throw new Error('playFullSample should be bound by installChopperImpls'); }
-        selectSliceForEffects(sliceIndex) { throw new Error('selectSliceForEffects should be bound by installChopperImpls'); }
-        playSliceWithEffects(sliceIndex) { throw new Error('playSliceWithEffects should be bound by installChopperImpls'); }
-        resetSliceEffects(sliceIndex) { throw new Error('resetSliceEffects should be bound by installChopperImpls'); }
-        applySliceEffectPreset(sliceIndex, presetName = null) { throw new Error('applySliceEffectPreset should be bound by installChopperImpls'); }
-        exportSliceWithEffects(sliceIndex) { throw new Error('exportSliceWithEffects should be bound by installChopperImpls'); }
-        createEqualSlices() { throw new Error('createEqualSlices should be bound by installChopperImpls'); }
-        detectTransients() { throw new Error('detectTransients should be bound by installChopperImpls'); }
-        renderChopperPads() { throw new Error('renderChopperPads should be bound by installChopperImpls'); }
-        playSlice(index) { throw new Error('playSlice should be bound by installChopperImpls'); }
-        slicesToSequencerRows() { throw new Error('slicesToSequencerRows should be bound by installChopperImpls'); }
-        slicesToLoopTracks() { throw new Error('slicesToLoopTracks should be bound by installChopperImpls'); }
-        exportAllSlices() { throw new Error('exportAllSlices should be bound by installChopperImpls'); }
-        setupChopperInteraction() { throw new Error('setupChopperInteraction should be bound by installChopperImpls'); }
+        // Chopper methods are installed at runtime by installChopperImpls() in chopper.js
 
         // ===== Remaining helper methods (not moved to modules) =====
 
-        applyEffectPreset() {
-            const slice = this.chopper.slices[sliceIndex];
-            if (!slice) return;
-            
-            // Get preset name from dropdown if not provided
-            if (!presetName) {
-                const presetSelect = document.getElementById(`slice-effect-preset-${sliceIndex}`);
-                presetName = presetSelect ? presetSelect.value : 'none';
-            }
-            
-            if (presetName === 'none') return;
-            
-            // Define effect presets
-            const presets = {
-                'lo-fi': {
-                    filter_type: 'lowpass',
-                    filter_freq: 800,
-                    filter_q: 2,
-                    dist_drive: 8,
-                    dist_curve: 30,
-                    dist_mix: 0.4,
-                    reverb_size: 0.3,
-                    reverb_decay: 1.5,
-                    reverb_mix: 0.2
-                },
-                'telephone': {
-                    filter_type: 'bandpass',
-                    filter_freq: 1200,
-                    filter_q: 8,
-                    dist_drive: 15,
-                    dist_curve: 50,
-                    dist_mix: 0.6
-                },
-                'radio': {
-                    filter_type: 'bandpass',
-                    filter_freq: 2500,
-                    filter_q: 4,
-                    dist_drive: 5,
-                    dist_curve: 20,
-                    dist_mix: 0.3,
-                    tremolo_rate: 1,
-                    tremolo_depth: 0.3
-                },
-                'underwater': {
-                    filter_type: 'lowpass',
-                    filter_freq: 400,
-                    filter_q: 0.5,
-                    chorus_rate: 0.5,
-                    chorus_depth: 0.008,
-                    reverb_size: 0.8,
-                    reverb_decay: 6,
-                    reverb_mix: 0.6,
-                    pitch: 0.8
-                },
-                'robot': {
-                    filter_type: 'bandpass',
-                    filter_freq: 1500,
-                    filter_q: 10,
-                    dist_drive: 20,
-                    dist_curve: 80,
-                    dist_mix: 0.7,
-                    tremolo_rate: 8,
-                    tremolo_depth: 0.8,
-                    pitch: 0.7
-                },
-                'vintage': {
-                    filter_type: 'lowpass',
-                    filter_freq: 5000,
-                    filter_q: 1.5,
-                    dist_drive: 3,
-                    dist_curve: 15,
-                    dist_mix: 0.2,
-                    chorus_rate: 1.5,
-                    chorus_depth: 0.005,
-                    tremolo_rate: 0.8,
-                    tremolo_depth: 0.2
-                },
-                'space': {
-                    delay_time: 0.375,
-                    delay_feedback: 0.7,
-                    delay_mix: 0.8,
-                    reverb_size: 0.9,
-                    reverb_decay: 8,
-                    reverb_mix: 0.5,
-                    chorus_rate: 0.3,
-                    chorus_depth: 0.012
-                },
-                'glitch': {
-                    dist_drive: 25,
-                    dist_curve: 90,
-                    dist_mix: 0.5,
-                    tremolo_rate: 16,
-                    tremolo_depth: 0.9,
-                    delay_time: 0.08,
-                    delay_feedback: 0.8,
-                    delay_mix: 0.4,
-                    pitch: 1.5
-                }
-            };
-            
-            const preset = presets[presetName];
-            if (preset) {
-                // Apply preset to slice effects
-                slice.effects = { ...slice.effects, ...preset };
-                
-                // Update the UI controls
-                this.selectSliceForEffects(sliceIndex);
-                
-                // Update all sliders to match the preset values
-                Object.keys(preset).forEach(param => {
-                    const slider = document.getElementById(`slice-${param.replace('_', '-')}-${sliceIndex}`);
-                    const display = document.getElementById(`slice-${param.replace('_', '-')}-${sliceIndex}-display`);
-                    if (slider && display) {
-                        slider.value = preset[param];
-                        
-                        // Update display with appropriate suffix
-                        let suffix = '';
-                        if (param.includes('freq')) suffix = 'Hz';
-                        else if (param.includes('time') || param.includes('decay')) suffix = 's';
-                        else if (param.includes('rate')) suffix = 'Hz';
-                        
-                        const decimals = param.includes('depth') && param.includes('chorus') ? 3 : 
-                                       param.includes('freq') || param.includes('curve') || param.includes('vibrato') ? 0 : 
-                                       param.includes('rate') || param.includes('drive') || param.includes('q') ? 1 : 2;
-                        
-                        display.textContent = parseFloat(preset[param]).toFixed(decimals) + suffix;
-                    }
-                });
-                
-                // Update dropdowns
-                const filterType = document.getElementById(`slice-filter-type-${sliceIndex}`);
-                if (filterType && preset.filter_type) {
-                    filterType.value = preset.filter_type;
-                }
-                
-                this.updateStatus(`Applied "${presetName}" preset to slice ${sliceIndex + 1}`);
-            }
-        }
-        
-        exportSliceWithEffects(sliceIndex) {
-            // TODO: Implement offline rendering with effects
-            this.updateStatus('Export with effects - coming soon!');
-        }
-        
-        createEqualSlices() {
-            if (!this.chopper.buffer) return;
-            
-            const duration = this.chopper.buffer.duration;
-            const sliceLength = duration / this.chopper.numSlices;
-            
-            this.chopper.sliceMarkers = [];
-            this.chopper.slices = [];
-            
-            for (let i = 0; i < this.chopper.numSlices; i++) {
-                const start = i * sliceLength;
-                const end = (i + 1) * sliceLength;
-                
-                this.chopper.sliceMarkers.push(start);
-                this.chopper.slices.push({ start, end });
-            }
-            
-            this.drawChopperWaveform();
-            this.drawChopperWaveformMain();
-            this.renderChopperPads();
-            this.renderChopperPadsMain();
-            this.updateStatus(`Created ${this.chopper.numSlices} equal slices`);
-        }
-        
-        detectTransients() {
-            if (!this.chopper.buffer) return;
-            
-            const data = this.chopper.buffer.getChannelData(0);
-            const sampleRate = this.chopper.buffer.sampleRate;
-            const sensitivity = this.chopper.sensitivity;
-            
-            // Improved transient detection using multiple algorithms
-            const windowSize = Math.floor(sampleRate * 0.02); // 20ms window for better resolution
-            const hopSize = Math.floor(windowSize / 8); // More overlap for precision
-            const minDistance = Math.floor(sampleRate * 0.03); // Minimum 30ms between transients
-            
-            // Sensitivity-based adaptive thresholds (inverted for intuitive behavior)
-            const baseEnergyThreshold = 1.2 + (1 - sensitivity) * 1.8; // 3.0 (low sens) to 1.2 (high sens)
-            const spectralFluxThreshold = 0.02 + sensitivity * 0.2; // 0.02 to 0.22
-            const highFreqThreshold = 0.15 + sensitivity * 0.5; // 0.15 to 0.65
-            
-            const transientCandidates = [];
-            let previousEnergy = 0;
-            let previousSpectralCentroid = 0;
-            let previousHighFreqEnergy = 0;
-            
-            // Process audio in overlapping windows
-            for (let i = 0; i < data.length - windowSize; i += hopSize) {
-                // Calculate multiple energy measures
-                let totalEnergy = 0;
-                let highFreqEnergy = 0;
-                let magnitudeSum = 0;
-                let weightedSum = 0;
-                
-                // Analyze current window
-                for (let j = 0; j < windowSize; j++) {
-                    const sample = data[i + j];
-                    const sampleSquared = sample * sample;
-                    totalEnergy += sampleSquared;
-                    
-                    // High frequency energy (rough approximation)
-                    if (j > windowSize * 0.6) {
-                        highFreqEnergy += sampleSquared;
-                    }
-                    
-                    // For spectral centroid
-                    const magnitude = Math.abs(sample);
-                    magnitudeSum += magnitude;
-                    weightedSum += magnitude * (j / windowSize);
-                }
-                
-                // Normalize energies
-                totalEnergy = Math.sqrt(totalEnergy / windowSize);
-                highFreqEnergy = Math.sqrt(highFreqEnergy / (windowSize * 0.4));
-                const spectralCentroid = magnitudeSum > 0 ? weightedSum / magnitudeSum : 0;
-                
-                // Multiple transient detection criteria
-                const energyIncrease = totalEnergy > previousEnergy * baseEnergyThreshold;
-                const spectralChange = Math.abs(spectralCentroid - previousSpectralCentroid) > spectralFluxThreshold;
-                const highFreqIncrease = highFreqEnergy > previousHighFreqEnergy * (1 + highFreqThreshold);
-                const aboveNoiseFloor = totalEnergy > 0.008; // Noise floor
-                
-                // Adaptive detection - at least 2 of 3 criteria must be met for reliability
-                let criteriaCount = 0;
-                if (energyIncrease) criteriaCount++;
-                if (spectralChange) criteriaCount++;
-                if (highFreqIncrease) criteriaCount++;
-                
-                const isTransient = criteriaCount >= 2 && aboveNoiseFloor;
-                
-                if (isTransient) {
-                    const timePosition = i / sampleRate;
-                    
-                    // Check minimum distance from previous transients
-                    let tooClose = false;
-                    for (const candidate of transientCandidates) {
-                        if (Math.abs(candidate.time - timePosition) < (minDistance / sampleRate)) {
-                            tooClose = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!tooClose) {
-                        // Add with confidence score for potential future sorting
-                        transientCandidates.push({
-                            time: timePosition,
-                            confidence: criteriaCount + (totalEnergy * 5)
-                        });
-                    }
-                }
-                
-                // Update previous values with slight smoothing to reduce noise
-                previousEnergy = previousEnergy * 0.3 + totalEnergy * 0.7;
-                previousSpectralCentroid = previousSpectralCentroid * 0.5 + spectralCentroid * 0.5;
-                previousHighFreqEnergy = previousHighFreqEnergy * 0.4 + highFreqEnergy * 0.6;
-            }
-            
-            // Sort by confidence and then by time
-            transientCandidates.sort((a, b) => b.confidence - a.confidence);
-            
-            // Take the most confident transients up to the limit
-            const maxTransients = Math.min(transientCandidates.length, this.chopper.numSlices - 1);
-            const selectedTransients = transientCandidates.slice(0, maxTransients);
-            
-            // Sort selected transients by time
-            selectedTransients.sort((a, b) => a.time - b.time);
-            
-            // Always include start position
-            this.chopper.sliceMarkers = [0, ...selectedTransients.map(t => t.time)];
-            this.chopper.slices = [];
-            
-            // Create slices from markers
-            const allMarkers = [...this.chopper.sliceMarkers, this.chopper.buffer.duration];
-            for (let i = 0; i < allMarkers.length - 1; i++) {
-                const start = allMarkers[i];
-                const end = allMarkers[i + 1];
-                this.chopper.slices.push({ start, end });
-            }
-            
-            this.drawChopperWaveform();
-            this.drawChopperWaveformMain();
-            this.renderChopperPads();
-            this.renderChopperPadsMain();
-            
-            const sensPercent = (sensitivity * 100).toFixed(0);
-            const avgConfidence = selectedTransients.length > 0 ? 
-                (selectedTransients.reduce((sum, t) => sum + t.confidence, 0) / selectedTransients.length).toFixed(1) : 0;
-            this.updateStatus(`Detected ${this.chopper.slices.length} transients (sensitivity: ${sensPercent}%, confidence: ${avgConfidence})`);
-        }
-        
-        renderChopperPads() {
-            const container = document.getElementById('chop-pads');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            
-            for (let i = 0; i < Math.min(16, this.chopper.numSlices); i++) {
-                const pad = document.createElement('div');
-                pad.className = 'chop-pad';
-                pad.textContent = i + 1;
-                pad.onclick = () => this.playSlice(i);
-                container.appendChild(pad);
-            }
-        }
-        
-        playSlice(index) {
-            if (!this.chopper.buffer || !this.chopper.slices[index]) return;
-            
-            const slice = this.chopper.slices[index];
-            const source = this.context.createBufferSource();
-            source.buffer = this.chopper.buffer;
-            
-            const gain = this.context.createGain();
-            gain.gain.value = 0.8;
-            
-            source.connect(gain);
-            gain.connect(this.masterGain);
-            
-            // ONE-SHOT MODE: No looping, plays once and stops
-            source.loop = false;
-            
-            // Track this source for the stop button
-            this.chopper.playingSources.add(source);
-            
-            // Remove from tracking when it ends naturally
-            source.onended = () => {
-                this.chopper.playingSources.delete(source);
-            };
-            
-            source.start(0, slice.start, slice.end - slice.start);
-            
-            // Flash pad
-            const pads = document.querySelectorAll('.chop-pad');
-            if (pads[index]) {
-                pads[index].classList.add('active');
-                setTimeout(() => pads[index].classList.remove('active'), 200);
-            }
-        }
-        
-        slicesToSequencerRows() {
-            if (!this.chopper.buffer || this.chopper.slices.length === 0) {
-                this.updateStatus('No slices to send');
-                return;
-            }
-            
-            // Allow all slices to be sent, not just first 8
-            const numSlices = this.chopper.slices.length;
-            const availableSlots = 16; // Sample bank has 16 slots
-            const slicesToSend = Math.min(numSlices, availableSlots);
-            
-            for (let i = 0; i < slicesToSend; i++) {
-                const slice = this.chopper.slices[i];
-                if (!slice) continue;
-                
-                // Create a new buffer for this slice
-                const duration = slice.end - slice.start;
-                const startSample = Math.floor(slice.start * this.context.sampleRate);
-                const endSample = Math.floor(slice.end * this.context.sampleRate);
-                const length = endSample - startSample;
-                
-                const sliceBuffer = this.context.createBuffer(
-                    1,
-                    length,
-                    this.context.sampleRate
-                );
-                
-                const sourceData = this.chopper.buffer.getChannelData(0);
-                const sliceData = sliceBuffer.getChannelData(0);
-                
-                for (let j = 0; j < length; j++) {
-                    sliceData[j] = sourceData[startSample + j] || 0;
-                }
-                
-                // Add to sample bank
-                const slotIndex = i;
-                this.sampleBank.set(slotIndex, {
-                    buffer: sliceBuffer,
-                    name: `Slice ${i + 1}`,
-                    duration: duration
-                });
-                
-                // Assign to sequencer row (for first 8 slices)
-                if (i < 8) {
-                    this.sequencer.rowSample[i] = slotIndex;
-                }
-                
-                // Update sample slot UI
-                const slot = document.getElementById(`sample-slot-${slotIndex}`);
-                if (slot) {
-                    slot.classList.add('loaded');
-                    slot.innerHTML = `
-                        <div style="font-size: 18px; font-weight: bold;">${slotIndex + 1}</div>
-                        <div style="font-size: 9px; opacity: 0.8;">Slice ${i + 1}</div>
-                        <div style="font-size: 8px; opacity: 0.6;">${duration.toFixed(2)}s</div>
-                    `;
-                }
-            }
+        // applySliceEffectPreset() and exportSliceWithEffects() are installed by installChopperImpls()
 
-        // Re-render sequencer rows
-        this.renderSequencer();
 
-        // Make sure the MPC sees the new samples in the sample bank
-        if (this.updateMPCPadLabels) {
-            this.updateMPCPadLabels();
-        }
+        // createEqualSlices, detectTransients, renderChopperPads, playSlice,
+        // slicesToSequencerRows, slicesToLoopTracks, exportAllSlices
+        // are all installed by installChopperImpls() in chopper.js
 
-        this.updateStatus(
-            `Sent ${slicesToSend} slices to sample bank${slicesToSend > 8 ? ' (first 8 assigned to sequencer rows)' : ''}`
-        );
-    }
-
-        
-        slicesToLoopTracks() {
-            if (!this.chopper.buffer || this.chopper.slices.length === 0) {
-                this.updateStatus('No chopped samples to send');
-                return;
-            }
-            
-            const numSlices = this.chopper.slices.length;
-            const availableTracks = this.maxTracks;
-            const slicesToSend = Math.min(numSlices, availableTracks);
-            
-            for (let i = 0; i < slicesToSend; i++) {
-                const slice = this.chopper.slices[i];
-                if (!slice) continue;
-                
-                // Create a new buffer for this slice
-                const duration = slice.end - slice.start;
-                const startSample = Math.floor(slice.start * this.context.sampleRate);
-                const endSample = Math.floor(slice.end * this.context.sampleRate);
-                const length = endSample - startSample;
-                
-                const sliceBuffer = this.context.createBuffer(
-                    1,
-                    length,
-                    this.context.sampleRate
-                );
-                
-                const sourceData = this.chopper.buffer.getChannelData(0);
-                const sliceData = sliceBuffer.getChannelData(0);
-                
-                for (let j = 0; j < length; j++) {
-                    sliceData[j] = sourceData[startSample + j] || 0;
-                }
-                
-                // Clear existing track content and assign slice
-                const track = this.tracks[i];
-                track.buffer = sliceBuffer;
-                track.chunks = [];
-                track.isRecording = false;
-                track.isPlaying = false;
-                
-                // Stop any ongoing playback
-                if (track.source) {
-                    track.source.stop();
-                    track.source = null;
-                }
-                
-                // Draw waveform for this track
-                this.drawWaveform(i, sliceBuffer);
-                
-                // Update track card visual state
-                const card = document.getElementById(`track-${i}`);
-                if (card) {
-                    card.classList.remove('recording');
-                    // Update rec button
-                    const recBtn = document.getElementById(`rec-btn-${i}`);
-                    if (recBtn) {
-                        recBtn.innerHTML = '[REC]';
-                        recBtn.classList.remove('active');
-                    }
-                }
-            }
-            
-            // Switch to unified view to see the tracks
-            const unifiedBtn = document.querySelector('[data-mode="unified"]');
-            if (unifiedBtn) {
-                unifiedBtn.click();
-            }
-            
-            this.updateStatus(`Sent ${slicesToSend} slices to loop tracks - Ready to play and layer!`);
-        }
-        
-        exportAllSlices() {
-            if (!this.chopper.buffer || this.chopper.slices.length === 0) {
-                this.updateStatus('No slices to export');
-                return;
-            }
-            
-            this.chopper.slices.forEach((slice, index) => {
-                const duration = slice.end - slice.start;
-                const startSample = Math.floor(slice.start * this.context.sampleRate);
-                const endSample = Math.floor(slice.end * this.context.sampleRate);
-                const length = endSample - startSample;
-                
-                const sliceBuffer = this.context.createBuffer(
-                    1,
-                    length,
-                    this.context.sampleRate
-                );
-                
-                const sourceData = this.chopper.buffer.getChannelData(0);
-                const sliceData = sliceBuffer.getChannelData(0);
-                
-                for (let j = 0; j < length; j++) {
-                    sliceData[j] = sourceData[startSample + j] || 0;
-                }
-                
-                const blob = this._audioBufferToWav(sliceBuffer);
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `slice_${index + 1}.wav`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-            });
-            
-            this.updateStatus(`Exported ${this.chopper.slices.length} slices`);
-        }
-        
+        /**
+         * bindUI() — UI event binding is handled by app.js.
+         * Transport state is initialized here so the engine is self-contained.
+         * Call this during init() to set default transport values.
+         */
         bindUI() {
-            // Mode switcher
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
-                    
-                    btn.classList.add('active');
-                    const mode = btn.dataset.mode;
-                    document.getElementById(`workspace-${mode}`).classList.add('active');
-                    
-                    // Render sequencer when switching to it
-                    if (mode === 'sequencer') {
-                        this.renderSequencer();
-                        renderSequencerControls();
-                    }
-                });
-            });
-            
-            // Master controls
-            document.getElementById('master-bpm')?.addEventListener('change', (e) => {
-                this.bpm = parseInt(e.target.value);
-                this.effects.delay.delayTime.value = 60 / this.bpm * 0.25;
-                this.updateStatus(`BPM set to ${this.bpm}`);
-            });
-            
-            document.getElementById('master-bars')?.addEventListener('change', (e) => {
-                this.bars = parseInt(e.target.value);
-                this.updateStatus(`Bars set to ${this.bars}`);
-            });
-            
-            document.getElementById('master-volume')?.addEventListener('input', (e) => {
-                const value = e.target.value / 100;
-                this.masterGain.gain.value = value;
-                document.getElementById('master-volume-display').textContent = `${e.target.value}%`;
-            });
-            
-            document.getElementById('input-gain')?.addEventListener('input', (e) => {
-                const value = e.target.value / 100;
-                if (this.inputGain) this.inputGain.gain.value = value;
-                document.getElementById('input-gain-display').textContent = `${e.target.value}%`;
-            });
-            
-            // Master transport
-            document.getElementById('master-play')?.addEventListener('click', () => this.playAll());
-            document.getElementById('master-stop')?.addEventListener('click', () => this.stopAll());
-            
-            // Record mode toggle
-            document.getElementById('record-mode-toggle')?.addEventListener('click', () => this.toggleRecordMode());
-            
-            // Count-in and first track bars
-            document.getElementById('count-in-bars')?.addEventListener('change', (e) => {
-                this.countInBars = parseInt(e.target.value);
-                this.updateStatus(`Count-in set to ${this.countInBars} bar(s)`);
-            });
-            
-            document.getElementById('count-in-first-only')?.addEventListener('change', (e) => {
-                this.countInFirstTrackOnly = e.target.checked;
-                this.updateStatus(`Count-in ${this.countInFirstTrackOnly ? 'first track only' : 'all tracks'}`);
-            });
+            // Transport / scheduler state (must be set before playAll/startMetronome)
+            this.bpm              = parseInt(document.getElementById('master-bpm')?.value) || 120;
+            this.bars             = parseInt(document.getElementById('master-bars')?.value) || 4;
+            this.countInBars      = parseInt(document.getElementById('count-in-bars')?.value) || 1;
+            this.firstTrackBars   = parseInt(document.getElementById('first-track-bars')?.value) || 4;
+            this.countInFirstTrackOnly    = document.getElementById('count-in-first-only')?.checked ?? true;
+            this.metronomeDuringRecording = document.getElementById('metronome-during-recording')?.checked ?? true;
+            this.quantize         = document.getElementById('quantize-enabled')?.checked ?? false;
+            this.recordMode       = 'replace';
+            this.metronomeEnabled = false;
+            this.metronomeRunning = false;
+            this.beatsPerBar      = 4;
+            this.transportStartTime = null;
+            this.nextClickTime    = 0;
+            this.lookahead        = 25;
+            this.scheduleAheadTime = 0.1;
+            this.timerID          = null;
 
-            document.getElementById('metronome-during-recording')?.addEventListener('change', (e) => {
-                this.metronomeDuringRecording = e.target.checked;
-                this.updateStatus(`Metronome during recording: ${this.metronomeDuringRecording ? 'ON' : 'OFF'}`);
-            });
-
-            document.getElementById('first-track-bars')?.addEventListener('change', (e) => {
-                this.firstTrackBars = parseInt(e.target.value);
-                this.updateStatus(`First track length set to ${this.firstTrackBars} bar(s)`);
-            });            // Tap tempo
-            document.getElementById('tap-tempo')?.addEventListener('click', () => this.tapTempo());
-            
-            // Quantize
-            document.getElementById('quantize-enabled')?.addEventListener('change', (e) => {
-                this.quantize = e.target.checked;
-            });
-            
-            // Metronome
-            document.getElementById('metronome-toggle')?.addEventListener('click', () => {
-                this.metronomeEnabled = !this.metronomeEnabled;
-                const btn = document.getElementById('metronome-toggle');
-                btn.textContent = this.metronomeEnabled ? 'Metronome' : 'Metronome';
-                if (this.metronomeEnabled) {
-                    this.startMetronome();
-                } else {
-                    this.stopMetronome();
-                }
-            });
-            
-            document.getElementById('metronome-volume')?.addEventListener('input', (e) => {
-                if (this.metGain) {
-                    this.metGain.gain.value = e.target.value / 100 * 0.5;
-                }
-            });
-            
-            // System audio capture
+            // System audio capture buttons (engine owns these since they need this.startSystemAudioCapture)
             document.getElementById('system-audio-capture')?.addEventListener('click', async () => {
-                // Show user instructions
-                const confirmMessage = `SYSTEM AUDIO CAPTURE INSTRUCTIONS:
-
-1. Click OK to open the screen sharing dialog
-2. Select a browser tab or application window that's playing audio
-3. IMPORTANT: Check the "Share audio" checkbox in the dialog
-4. Click "Share" to start capturing that audio
-
-This will let you record audio from YouTube, Spotify, games, or any other app!
-
-Ready to proceed?`;
-                
-                if (!confirm(confirmMessage)) {
-                    this.updateStatus('System audio capture cancelled by user');
-                    return;
-                }
-                
+                const msg = `SYSTEM AUDIO CAPTURE INSTRUCTIONS:\n\n1. Click OK to open the screen sharing dialog\n2. Select a browser tab or application window that's playing audio\n3. IMPORTANT: Check the "Share audio" checkbox in the dialog\n4. Click "Share" to start capturing that audio\n\nReady to proceed?`;
+                if (!confirm(msg)) { this.updateStatus('System audio capture cancelled'); return; }
                 const success = await this.startSystemAudioCapture();
                 if (success) {
                     document.getElementById('system-audio-capture').style.display = 'none';
                     document.getElementById('system-audio-stop').style.display = 'inline-block';
                 }
             });
-            
+
             document.getElementById('system-audio-stop')?.addEventListener('click', () => {
                 this.stopSystemAudioCapture();
                 document.getElementById('system-audio-capture').style.display = 'inline-block';
                 document.getElementById('system-audio-stop').style.display = 'none';
                 this.updateStatus('System audio capture stopped');
             });
-            
-            // Studio features
-            document.getElementById('mixdown-tracks')?.addEventListener('click', () => this.mixdownTracks());
-            document.getElementById('undo-edit')?.addEventListener('click', () => this.undoLastEdit());
-            
-            // Quick effects
-            document.getElementById('quick-reverb')?.addEventListener('input', (e) => {
-                const value = e.target.value / 100;
-                this.effects.reverbSend.gain.value = value;
-                e.target.nextElementSibling.textContent = `${e.target.value}%`;
-            });
-            
-            document.getElementById('quick-delay')?.addEventListener('input', (e) => {
-                const value = e.target.value / 100;
-                this.effects.delaySend.gain.value = value;
-                e.target.nextElementSibling.textContent = `${e.target.value}%`;
-            });
-            
-            document.getElementById('quick-filter')?.addEventListener('input', (e) => {
-                const value = e.target.value / 100;
-                this.effects.filter.frequency.value = 200 + (value * 19800);
-                e.target.nextElementSibling.textContent = `${e.target.value}%`;
-            });
-            
-            // Initialize properties from UI elements
-            this.bpm = parseInt(document.getElementById('master-bpm')?.value) || 120;
-            this.bars = parseInt(document.getElementById('master-bars')?.value) || 4;
-            this.countInBars = parseInt(document.getElementById('count-in-bars')?.value) || 1;
-            this.firstTrackBars = parseInt(document.getElementById('first-track-bars')?.value) || 4;
-            this.countInFirstTrackOnly = document.getElementById('count-in-first-only')?.checked ?? true;
-            this.metronomeDuringRecording = document.getElementById('metronome-during-recording')?.checked ?? true;
-            this.quantize = document.getElementById('quantize-enabled')?.checked ?? false;
-            this.recordMode = 'replace';
-            this.metronomeEnabled = false;
-            this.metronomeRunning = false;
-            this.beatsPerBar = 4;
-            this.transportStartTime = null;
-            this.nextClickTime = 0;
-            this.lookahead = 25;
-            this.scheduleAheadTime = 0.1;
-            this.timerID = null;
         }
         
-        tapTempo() {
-            const now = performance.now();
-            
-            // Reset if more than 2 seconds since last tap
-            if (now - this.lastTapTime > 2000) {
-                this.tapTimes = [];
-            }
-            
-            this.tapTimes.push(now);
-            this.lastTapTime = now;
-            
-            // Calculate BPM from last 4 taps
-            if (this.tapTimes.length > 1) {
-                const intervals = [];
-                for (let i = 1; i < this.tapTimes.length; i++) {
-                    intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
-                }
-                
-                const avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
-                const bpm = Math.round(60000 / avgInterval);
-                
-                if (bpm >= 60 && bpm <= 200) {
-                    this.bpm = bpm;
-                    document.getElementById('master-bpm').value = bpm;
-                    this.effects.delay.delayTime.value = 60 / this.bpm * 0.25;
-                    this.updateStatus(`BPM tapped: ${bpm}`);
-                }
-            }
-            
-            // Keep only last 8 taps
-            if (this.tapTimes.length > 8) {
-                this.tapTimes.shift();
-            }
-        }
-        
+        // tapTempo() is installed by installSequencerImpls() in sequencer.js
+
         toggleRecordMode() {
             // Cycle through: replace -> overdub -> play -> replace
             const modes = ['replace', 'overdub', 'play'];
@@ -1564,7 +787,9 @@ Ready to proceed?`;
             canvas.style.cursor = 'crosshair';
         }
         
-        applyEffectPreset() {
+        // Applies a named quick-FX preset to the master effects bus.
+        // Called from the #effect-preset dropdown in the UI.
+        applyMasterPreset() {
             const preset = document.getElementById('effect-preset').value;
             const presets = {
                 'clean': { reverb: 0, delay: 0, filter: 100 },
@@ -1824,88 +1049,6 @@ Ready to proceed?`;
             return new Blob([arrayBuffer], { type: 'audio/wav' });
         }
 
-        renderSequencer() {
-            const grid = document.getElementById('sequencer-grid');
-            if (!grid) return;
-            const rows = this.sequencer.numRows;
-            const steps = this.sequencer.numSteps;
-            grid.innerHTML = '';
-            
-            // header row
-            const headLabel = document.createElement('div');
-            headLabel.className = 'seq-row-label';
-            headLabel.textContent = 'Row / Step';
-            grid.appendChild(headLabel);
-            
-            for (let sIdx = 0; sIdx < steps; sIdx++) {
-                const h = document.createElement('div');
-                h.className = 'step-head';
-                h.title = 'Step ' + (sIdx+1);
-                grid.appendChild(h);
-            }
-            
-            // rows
-            for (let r = 0; r < rows; r++) {
-                const label = document.createElement('div');
-                label.className = 'seq-row-label';
-                const slotIdx = this.sequencer.rowSample[r];
-                label.innerHTML = `<div><strong>Row ${r+1}</strong><div style="opacity:.7;font-size:11px">${slotIdx!=null?('Slot '+(slotIdx+1)):'--'}</div></div>`;
-                
-                const ctrls = document.createElement('div');
-                ctrls.className='seq-row-controls';
-                ctrls.innerHTML = `
-                    <label>Vol</label><input class="tiny" type="range" min="0" max="1" step="0.01" value="${this.sequencer.rowGain[r].toFixed(2)}"/>
-                    <label>Pan</label><input class="tiny" type="range" min="-1" max="1" step="0.01" value="${this.sequencer.rowPan[r].toFixed(2)}"/>
-                    <label>Rev</label><input class="tiny" type="range" min="0" max="1" step="0.01" value="${this.sequencer.rowRev[r].toFixed(2)}"/>
-                    <label>Del</label><input class="tiny" type="range" min="0" max="1" step="0.01" value="${this.sequencer.rowDel[r].toFixed(2)}"/>
-                `;
-                
-                const inputs = Array.from(ctrls.querySelectorAll('input'));
-                inputs[0].addEventListener('input', (e)=>this.sequencer.rowGain[r]=Number(e.target.value));
-                inputs[1].addEventListener('input', (e)=>this.sequencer.rowPan[r]=Number(e.target.value));
-                inputs[2].addEventListener('input', (e)=>this.sequencer.rowRev[r]=Number(e.target.value));
-                inputs[3].addEventListener('input', (e)=>this.sequencer.rowDel[r]=Number(e.target.value));
-                
-                label.appendChild(ctrls);
-                grid.appendChild(label);
-                
-                for (let sIdx = 0; sIdx < steps; sIdx++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'seq-step' + (this.sequencer.grid[r][sIdx] ? ' active' : '');
-                    cell.dataset.row = r; 
-                    cell.dataset.step = sIdx;
-                    
-                    const vb = document.createElement('div'); 
-                    vb.className='velbar';
-                    vb.style.transform = `scaleY(${this.sequencer.velGrid[r][sIdx]})`;
-                    cell.appendChild(vb);
-                    
-                    cell.addEventListener('click', (e) => {
-                        const rr = Number(cell.dataset.row);
-                        const ss = Number(cell.dataset.step);
-                        if (e.shiftKey) {
-                            // Shift-click adjusts velocity
-                            const cur = this.sequencer.velGrid[rr][ss];
-                            let next = 0.5;
-                            if (cur < 0.55) next = 0.8;
-                            else if (cur < 0.85) next = 1.0;
-                            else next = 0.5;
-                            this.sequencer.velGrid[rr][ss] = next;
-                            vb.style.transform = `scaleY(${next})`;
-                            if (!this.sequencer.grid[rr][ss]) {
-                                this.sequencer.grid[rr][ss] = true;
-                                cell.classList.add('active');
-                            }
-                        } else {
-                            // Regular click toggles step
-                            this.sequencer.grid[rr][ss] = !this.sequencer.grid[rr][ss];
-                            cell.classList.toggle('active', this.sequencer.grid[rr][ss]);
-                        }
-                    });
-                    
-                    grid.appendChild(cell);
-                }
-            }
-        }
+        // renderSequencer() lives in sequencer.js and is bound via installSequencerImpls()
 
     }
